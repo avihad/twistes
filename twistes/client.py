@@ -27,6 +27,7 @@ class Elasticsearch(object):
     def info(self, **query_params):
         """
         Get basic information about the cluster
+        `<http://www.elastic.co/guide/>`_
         """
         yield self._perform_request(HttpMethod.GET, '/', params=query_params)
 
@@ -34,6 +35,7 @@ class Elasticsearch(object):
     def get(self, index, id, fields=None, doc_type=EsConst.ALL_VALUES, **query_params):
         """
         Retrieve specific record by id
+        `<http://www.elastic.co/guide/en/elasticsearch/reference/current/docs-get.html>`_
         :param index: the index name to query
         :param id: the id of the record
         :param fields: the fields you what to fetch from the record (str separated by comma's)
@@ -52,6 +54,7 @@ class Elasticsearch(object):
     def exists(self, index, doc_type, id, **query_params):
         """
         Check if the doc exist in the elastic search
+        `<http://www.elastic.co/guide/en/elasticsearch/reference/current/docs-get.html>`_
         :param index: the index name
         :param doc_type: the document type
         :param id: the id of the doc type
@@ -73,6 +76,7 @@ class Elasticsearch(object):
     def get_source(self, index, doc_type, id, **query_params):
         """
         Get the _source of the document
+        `<http://www.elastic.co/guide/en/elasticsearch/reference/current/docs-get.html>`_
         :param index: the index name
         :param doc_type: the document type
         :param id: the id of the doc type
@@ -131,8 +135,9 @@ class Elasticsearch(object):
     @inlineCallbacks
     def update(self, index, doc_type, id, body=None, **query_params):
         """
-        Update a document with the body param
-        or list of ids
+        Update a document with the body param or list of ids
+        `<http://www.elastic.co/guide/en/elasticsearch/reference/current/docs-update.html>`_
+
         :param index: the name of the index
         :param doc_type: the document type
         :param id: the id of the doc type
@@ -168,6 +173,8 @@ class Elasticsearch(object):
     def search(self, index=None, doc_type=None, body=None, **query_params):
         """
         Make a search query on the elastic search
+        `<http://www.elastic.co/guide/en/elasticsearch/reference/current/search-search.html>`_
+
         :param index: the index name to query
         :param doc_type: he doc type to search in
         :param body: the query
@@ -243,10 +250,10 @@ class Elasticsearch(object):
         document. This can give useful feedback whether a document matches or
         didn't match a specific query.
         `<http://www.elastic.co/guide/en/elasticsearch/reference/current/search-explain.html>`_
-        :arg index: The name of the index
-        :arg doc_type: The type of the document
-        :arg id: The document ID
-        :arg body: The query definition using the Query DSL
+        :param index: The name of the index
+        :param doc_type: The type of the document
+        :param id: The document ID
+        :param body: The query definition using the Query DSL
         :arg _source: True or false to return the _source field or not, or a
             list of fields to return
         :arg _source_exclude: A list of fields to exclude from the returned
@@ -280,6 +287,7 @@ class Elasticsearch(object):
     def delete(self, index, doc_type, id, **query_params):
         """
         Delete specific record by id
+        `<http://www.elastic.co/guide/en/elasticsearch/reference/current/docs-delete.html>`_
         :param index: the index name to delete from
         :param doc_type: the doc type to delete from
         :param id: the id of the record
@@ -549,11 +557,12 @@ class Elasticsearch(object):
     @staticmethod
     def _bulk_body(body):
         # if not passed in a string, serialize items and join by newline
+        line_feed = '\n'
         if not isinstance(body, str):
-            body = '\n'.join(map(json.dumps, body))
+            body = line_feed.join(map(json.dumps, body))
 
         # bulk body must end with a newline
-        if not body.endswith('\n'):
-            body += '\n'
+        if not body.endswith(line_feed):
+            body += line_feed
 
         return body
