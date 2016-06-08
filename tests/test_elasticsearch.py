@@ -1,7 +1,7 @@
 import json
 import urllib
 
-from mock import MagicMock, ANY
+from mock import MagicMock
 from twisted.internet.defer import inlineCallbacks
 from twisted.trial.unittest import TestCase
 from twisted.web._newclient import ResponseNeverReceived
@@ -40,11 +40,92 @@ class TestElasticsearch(TestCase):
         self.es = Elasticsearch(SOME_HOSTS_CONFIG, TIMEOUT, MagicMock())
 
     @inlineCallbacks
+    def test_info(self):
+        self.es._async_http_client.request = MagicMock(return_value=self.generate_response(ResponseCodes.OK))
+        yield self.es.info()
+        expected_url = '{host}:{port}/'.format(host=SOME_HOST, port=SOME_PORT)
+
+        self.es._async_http_client.request.assert_called_once_with(HttpMethod.GET, expected_url,
+                                                                   auth=(SOME_USER, SOME_PASS), data=None,
+                                                                   timeout=TIMEOUT)
+
+    @inlineCallbacks
+    def test_exists(self):
+        self.es._async_http_client.request = MagicMock(return_value=self.generate_response(ResponseCodes.OK))
+        yield self.es.exists(SOME_INDEX, SOME_DOC_TYPE, id=SOME_ID)
+        expected_url = '{host}:{port}/{index}/{doc_type}/{id}'.format(host=SOME_HOST, port=SOME_PORT, index=SOME_INDEX,
+                                                                      doc_type=SOME_DOC_TYPE, id=SOME_ID)
+
+        self.es._async_http_client.request.assert_called_once_with(HttpMethod.HEAD, expected_url,
+                                                                   auth=(SOME_USER, SOME_PASS), data=None,
+                                                                   timeout=TIMEOUT)
+
+    @inlineCallbacks
+    def test_get_source(self):
+        self.es._async_http_client.request = MagicMock(return_value=self.generate_response(ResponseCodes.OK))
+        yield self.es.get_source(SOME_INDEX, SOME_DOC_TYPE, id=SOME_ID)
+        expected_url = '{host}:{port}/{index}/{doc_type}/{id}/{method}'.format(host=SOME_HOST, port=SOME_PORT,
+                                                                               index=SOME_INDEX,
+                                                                               doc_type=SOME_DOC_TYPE, id=SOME_ID,
+                                                                               method=EsMethods.SOURCE)
+
+        self.es._async_http_client.request.assert_called_once_with(HttpMethod.GET, expected_url,
+                                                                   auth=(SOME_USER, SOME_PASS), data=None,
+                                                                   timeout=TIMEOUT)
+
+    @inlineCallbacks
+    def test_mget(self):
+        self.es._async_http_client.request = MagicMock(return_value=self.generate_response(ResponseCodes.OK))
+        query = {'ids': ['1', '2']}
+        yield self.es.mget(body=query, index=SOME_INDEX, doc_type=SOME_DOC_TYPE)
+        expected_url = '{host}:{port}/{index}/{doc_type}/{method}'.format(host=SOME_HOST, port=SOME_PORT,
+                                                                          index=SOME_INDEX,
+                                                                          doc_type=SOME_DOC_TYPE, id=SOME_ID,
+                                                                          method=EsMethods.MULTIPLE_GET)
+
+        self.es._async_http_client.request.assert_called_once_with(HttpMethod.GET, expected_url,
+                                                                   auth=(SOME_USER, SOME_PASS), data=json.dumps(query),
+                                                                   timeout=TIMEOUT)
+
+    @inlineCallbacks
+    def test_mget_empty_body(self):
+        self.es._async_http_client.request = MagicMock(return_value=self.generate_response(ResponseCodes.OK))
+        yield self.assertFailure(self.es.mget(body=None, index=SOME_INDEX, doc_type=SOME_DOC_TYPE), ValueError)
+
+    @inlineCallbacks
+    def test_update(self):
+        self.es._async_http_client.request = MagicMock(return_value=self.generate_response(ResponseCodes.OK))
+        query = {'name': 'joseph', 'last_name': 'smith'}
+        yield self.es.update(index=SOME_INDEX, doc_type=SOME_DOC_TYPE, id=SOME_ID, body=query)
+        expected_url = '{host}:{port}/{index}/{doc_type}/{id}/{method}'.format(host=SOME_HOST, port=SOME_PORT,
+                                                                               index=SOME_INDEX,
+                                                                               doc_type=SOME_DOC_TYPE, id=SOME_ID,
+                                                                               method=EsMethods.UPDATE)
+
+        self.es._async_http_client.request.assert_called_once_with(HttpMethod.POST, expected_url,
+                                                                   auth=(SOME_USER, SOME_PASS), data=json.dumps(query),
+                                                                   timeout=TIMEOUT)
+
+    @inlineCallbacks
+    def test_explain(self):
+        self.es._async_http_client.request = MagicMock(return_value=self.generate_response(ResponseCodes.OK))
+        query = {'name': 'joseph', 'last_name': 'smith'}
+        yield self.es.explain(index=SOME_INDEX, doc_type=SOME_DOC_TYPE, id=SOME_ID, body=query)
+        expected_url = '{host}:{port}/{index}/{doc_type}/{id}/{method}'.format(host=SOME_HOST, port=SOME_PORT,
+                                                                               index=SOME_INDEX,
+                                                                               doc_type=SOME_DOC_TYPE, id=SOME_ID,
+                                                                               method=EsMethods.EXPLAIN)
+
+        self.es._async_http_client.request.assert_called_once_with(HttpMethod.GET, expected_url,
+                                                                   auth=(SOME_USER, SOME_PASS), data=json.dumps(query),
+                                                                   timeout=TIMEOUT)
+
+    @inlineCallbacks
     def test_get_simple(self):
         self.es._async_http_client.request = MagicMock(return_value=self.generate_response(ResponseCodes.OK))
         yield self.es.get(SOME_INDEX, id=SOME_ID)
         expected_url = '{host}:{port}/{index}/{doc_type}/{id}'.format(host=SOME_HOST, port=SOME_PORT, index=SOME_INDEX,
-                                                                      doc_type=EsConst.ANY_DOC_TYPE, id=SOME_ID)
+                                                                      doc_type=EsConst.ALL_VALUES, id=SOME_ID)
 
         self.es._async_http_client.request.assert_called_once_with(HttpMethod.GET, expected_url,
                                                                    auth=(SOME_USER, SOME_PASS), data=None,
@@ -57,8 +138,9 @@ class TestElasticsearch(TestCase):
         yield self.assertFailure(self.es.get(SOME_INDEX, id=SOME_ID), NotFoundError)
 
         expected_url = '{host}:{port}/{index}/{doc_type}/{id}'.format(host=SOME_HOST, port=SOME_PORT, index=SOME_INDEX,
-                                                                      doc_type=EsConst.ANY_DOC_TYPE, id=SOME_ID)
-        self.es._async_http_client.request.assert_called_once_with(HttpMethod.GET, expected_url, auth=(SOME_USER, SOME_PASS), data=None,
+                                                                      doc_type=EsConst.ALL_VALUES, id=SOME_ID)
+        self.es._async_http_client.request.assert_called_once_with(HttpMethod.GET, expected_url,
+                                                                   auth=(SOME_USER, SOME_PASS), data=None,
                                                                    timeout=TIMEOUT)
 
     @inlineCallbacks
@@ -83,7 +165,8 @@ class TestElasticsearch(TestCase):
                                                                                fileds=urllib.urlencode(
                                                                                    {EsConst.FIELDS: SOME_FIELDS}))
 
-        self.es._async_http_client.request.assert_called_once_with(HttpMethod.GET, expected_url, auth=(SOME_USER, SOME_PASS), data=None,
+        self.es._async_http_client.request.assert_called_once_with(HttpMethod.GET, expected_url,
+                                                                   auth=(SOME_USER, SOME_PASS), data=None,
                                                                    timeout=TIMEOUT)
 
     @staticmethod
@@ -101,7 +184,8 @@ class TestElasticsearch(TestCase):
                                                                           index=SOME_INDEX,
                                                                           doc_type=SOME_DOC_TYPE,
                                                                           method=EsMethods.SEARCH)
-        self.es._async_http_client.request.assert_called_once_with(HttpMethod.POST, expected_url, auth=(SOME_USER, SOME_PASS),
+        self.es._async_http_client.request.assert_called_once_with(HttpMethod.POST, expected_url,
+                                                                   auth=(SOME_USER, SOME_PASS),
                                                                    data=json.dumps(some_search_query),
                                                                    timeout=TIMEOUT)
 
@@ -112,7 +196,8 @@ class TestElasticsearch(TestCase):
         expected_url = '{host}:{port}/{index}/{doc_type}/{id}'.format(host=SOME_HOST, port=SOME_PORT, index=SOME_INDEX,
                                                                       doc_type=SOME_DOC_TYPE, id=SOME_ID)
 
-        self.es._async_http_client.request.assert_called_once_with(HttpMethod.DELETE, expected_url, auth=(SOME_USER, SOME_PASS),
+        self.es._async_http_client.request.assert_called_once_with(HttpMethod.DELETE, expected_url,
+                                                                   auth=(SOME_USER, SOME_PASS),
                                                                    data=None,
                                                                    timeout=TIMEOUT)
 
@@ -124,7 +209,8 @@ class TestElasticsearch(TestCase):
         expected_url = '{host}:{port}/{index}/{doc_type}/{id}'.format(host=SOME_HOST, port=SOME_PORT, index=SOME_INDEX,
                                                                       doc_type=SOME_DOC_TYPE, id=SOME_ID)
 
-        self.es._async_http_client.request.assert_called_once_with(HttpMethod.PUT, expected_url, auth=(SOME_USER, SOME_PASS),
+        self.es._async_http_client.request.assert_called_once_with(HttpMethod.PUT, expected_url,
+                                                                   auth=(SOME_USER, SOME_PASS),
                                                                    data=json.dumps(doc_to_index),
                                                                    timeout=TIMEOUT)
 
@@ -136,7 +222,8 @@ class TestElasticsearch(TestCase):
         expected_url = '{host}:{port}/{index}/{doc_type}'.format(host=SOME_HOST, port=SOME_PORT, index=SOME_INDEX,
                                                                  doc_type=SOME_DOC_TYPE)
 
-        self.es._async_http_client.request.assert_called_once_with(HttpMethod.POST, expected_url, auth=(SOME_USER, SOME_PASS),
+        self.es._async_http_client.request.assert_called_once_with(HttpMethod.POST, expected_url,
+                                                                   auth=(SOME_USER, SOME_PASS),
                                                                    data=json.dumps(doc_to_index),
                                                                    timeout=TIMEOUT)
 
@@ -158,12 +245,32 @@ class TestElasticsearch(TestCase):
         yield self.assertFailure(self.es.index(SOME_INDEX, SOME_DOC_TYPE, None), ValueError)
 
     @inlineCallbacks
+    def test_create(self):
+        self.es.index = MagicMock()
+        doc_to_index = {FILED_1: 'bla', FILED_2: 'bla2'}
+        yield self.es.create(SOME_INDEX, SOME_DOC_TYPE, doc_to_index, id=SOME_ID)
+        self.es.index.assert_called_once_with(SOME_INDEX, SOME_DOC_TYPE, doc_to_index, id=SOME_ID,
+                                              params={'op_type': 'create'})
+
+    @inlineCallbacks
     def test_scroll(self):
         self.es._async_http_client.request = MagicMock(return_value=self.generate_response(ResponseCodes.OK))
         scroll_id = '12345'
         yield self.es.scroll(scroll_id)
         expected_url = '{host}:{port}{method}'.format(host=SOME_HOST, port=SOME_PORT, method=EsMethods.SCROLL)
-        self.es._async_http_client.request.assert_called_once_with(HttpMethod.GET, expected_url, auth=(SOME_USER, SOME_PASS),
+        self.es._async_http_client.request.assert_called_once_with(HttpMethod.GET, expected_url,
+                                                                   auth=(SOME_USER, SOME_PASS),
+                                                                   data=scroll_id,
+                                                                   timeout=TIMEOUT)
+
+    @inlineCallbacks
+    def test_clear_scroll(self):
+        self.es._async_http_client.request = MagicMock(return_value=self.generate_response(ResponseCodes.OK))
+        scroll_id = '12345'
+        yield self.es.clear_scroll(scroll_id)
+        expected_url = '{host}:{port}{method}'.format(host=SOME_HOST, port=SOME_PORT, method=EsMethods.SCROLL)
+        self.es._async_http_client.request.assert_called_once_with(HttpMethod.DELETE, expected_url,
+                                                                   auth=(SOME_USER, SOME_PASS),
                                                                    data=scroll_id,
                                                                    timeout=TIMEOUT)
 
@@ -181,5 +288,50 @@ class TestElasticsearch(TestCase):
         scroll_result = yield self.es.scan(SOME_INDEX, SOME_DOC_TYPE, query=some_search_query, scroll=scroll_size)
         self.es.search.assert_called_once_with(index=SOME_INDEX, doc_type=SOME_DOC_TYPE, body=some_search_query,
                                                scroll=scroll_size, search_type='scan')
-
         self.assertEqual(Scroller(self.es, some_search_result).__dict__, scroll_result.__dict__)
+
+    @inlineCallbacks
+    def test_count(self):
+        self.es._async_http_client.request = MagicMock(return_value=self.generate_response(ResponseCodes.OK))
+        some_search_query = {"query": {"match": {FILED_1: "blabla"}}}
+        yield self.es.count(SOME_INDEX, SOME_DOC_TYPE, body=some_search_query)
+        expected_url = '{host}:{port}/{index}/{doc_type}/{method}'.format(host=SOME_HOST, port=SOME_PORT,
+                                                                          index=SOME_INDEX,
+                                                                          doc_type=SOME_DOC_TYPE,
+                                                                          method=EsMethods.COUNT)
+        self.es._async_http_client.request.assert_called_once_with(HttpMethod.GET, expected_url,
+                                                                   auth=(SOME_USER, SOME_PASS),
+                                                                   data=json.dumps(some_search_query),
+                                                                   timeout=TIMEOUT)
+
+    @inlineCallbacks
+    def test_bulk_list(self):
+        self.es._async_http_client.request = MagicMock(return_value=self.generate_response(ResponseCodes.OK))
+        index_query1 = {FILED_1: "blabla1"}
+        index_query2 = {FILED_1: "blabla2"}
+        yield self.es.bulk([index_query1, index_query2], SOME_INDEX, SOME_DOC_TYPE)
+        expected_url = '{host}:{port}/{index}/{doc_type}/{method}'.format(host=SOME_HOST, port=SOME_PORT,
+                                                                          index=SOME_INDEX,
+                                                                          doc_type=SOME_DOC_TYPE,
+                                                                          method=EsMethods.BULK)
+        expected_body='{q1}\n{q2}\n'.format(q1=json.dumps(index_query1), q2=json.dumps(index_query2))
+        self.es._async_http_client.request.assert_called_once_with(HttpMethod.POST, expected_url,
+                                                                   auth=(SOME_USER, SOME_PASS),
+                                                                   data=expected_body,
+                                                                   timeout=TIMEOUT)
+
+    @inlineCallbacks
+    def test_msearch_list(self):
+        self.es._async_http_client.request = MagicMock(return_value=self.generate_response(ResponseCodes.OK))
+        search_query1 = {'query': {'match':{FILED_1: "blabla1"}}}
+        search_query2 = {'query': {'match':{FILED_1: "blabla2"}}}
+        yield self.es.msearch([search_query1, search_query2], SOME_INDEX, SOME_DOC_TYPE)
+        expected_url = '{host}:{port}/{index}/{doc_type}/{method}'.format(host=SOME_HOST, port=SOME_PORT,
+                                                                          index=SOME_INDEX,
+                                                                          doc_type=SOME_DOC_TYPE,
+                                                                          method=EsMethods.MULTIPLE_SEARCH)
+        expected_body='{q1}\n{q2}\n'.format(q1=json.dumps(search_query1), q2=json.dumps(search_query2))
+        self.es._async_http_client.request.assert_called_once_with(HttpMethod.GET, expected_url,
+                                                                   auth=(SOME_USER, SOME_PASS),
+                                                                   data=expected_body,
+                                                                   timeout=TIMEOUT)

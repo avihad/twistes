@@ -1,4 +1,5 @@
 class HttpMethod(object):
+    HEAD = 'HEAD'
     GET = 'GET'
     POST = 'POST'
     PUT = 'PUT'
@@ -14,6 +15,13 @@ class ResponseCodes(object):
 
 
 class EsMethods(object):
+    MULTIPLE_SEARCH = '_msearch'
+    BULK = '_bulk'
+    COUNT = '_count'
+    EXPLAIN = '_explain'
+    MULTIPLE_GET = '_mget'
+    UPDATE = '_update'
+    SOURCE = '_source'
     SEARCH = '_search'
     SCROLL = '/_search/scroll'
 
@@ -22,7 +30,7 @@ class EsConst(object):
     TOTAL = 'total'
     FAILED = 'failed'
     SHARDS = '_shards'
-    ANY_DOC_TYPE = '_all'
+    ALL_VALUES = '_all'
     FIELDS = 'fields'
     SCROLL_ID = 'scroll_id'
     UNDERSCORE_SCROLL_ID = '_scroll_id'
