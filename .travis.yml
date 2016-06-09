@@ -5,7 +5,7 @@ python:
 
 
 install:
-  - pip install codecov
+  - pip install tox nose codecov
 
 # command to run tests
 script:
