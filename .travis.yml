@@ -5,11 +5,11 @@ python:
 
 
 install:
-  - pip install tox nose codecov
+  - pip install tox python-coveralls
 
 # command to run tests
 script:
   - tox
 
 after_success:
-  - codecov
+  - coveralls
