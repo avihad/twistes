@@ -12,8 +12,7 @@ ver_path = convert_path('twistes/version.py')
 with codecs.open(ver_path, 'rb', 'utf8') as ver_file:
     exec (ver_file.read(), main_ns)
 
-install_requires = parse_requirements("requirements.txt", session=False)
-reqs = [str(ir.req) for ir in install_requires]
+install_requires = ['twisted==16.2.0', 'treq==15.1.0']
 
 if sys.version_info < (2, 7):
     # python 2.6 isn't supported
@@ -47,6 +46,6 @@ setup(
     download_url='https://github.com/avihad/twistes/tarball/{version}'.format(version=main_ns['__version__']),
     zip_safe=False,
     include_package_data=True,
-    install_requires=reqs,
+    install_requires=install_requires,
     test_suite='tests'
 )
