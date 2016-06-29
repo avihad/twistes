@@ -1,12 +1,10 @@
 from unittest import TestCase
-
 from twistes.consts import EsConst
 from twistes.exceptions import ScanError
 from twistes.utilities import EsUtils
 
 
 class TestEsUtils(TestCase):
-
     def test_extract_hits(self):
         result_hits = [{'filed': 'value'}]
         good_result = self.create_results(result_hits)
@@ -47,3 +45,7 @@ class TestEsUtils(TestCase):
                     EsConst.FAILED: failures,
                     EsConst.TOTAL: 2
                 }}
+
+    def test_is_get_query_with_results_valid_response_returns_true(self):
+        es_get_response = {"_type": "type", "_index": "index", "fields": {}, "_version": 1, "found": True, "_id": "id"}
+        self.assertTrue(EsUtils.is_get_query_with_results(es_get_response))

@@ -35,6 +35,7 @@ class EsConst(object):
     SCROLL_ID = 'scroll_id'
     UNDERSCORE_SCROLL_ID = '_scroll_id'
     HITS = 'hits'
+    FOUND = 'found'
 
 
 # parts of URL to be omitted
