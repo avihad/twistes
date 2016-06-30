@@ -1,7 +1,7 @@
 from twisted.internet.defer import succeed, inlineCallbacks, returnValue
 
-from consts import EsConst
-from utilities import EsUtils
+from twistes.consts import EsConst
+from twistes.utilities import EsUtils
 
 
 class Scroller(object):
@@ -37,6 +37,9 @@ class Scroller(object):
         else:
             raise StopIteration()
         return d
+
+    def __next__(self):
+        return self.next()
 
     @inlineCallbacks
     def scroll_next_results(self):

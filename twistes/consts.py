@@ -37,5 +37,35 @@ class EsConst(object):
     HITS = 'hits'
 
 
+class EsBulk(object):
+    OP_TYPE = '_op_type'
+    INDEX = 'index'
+    CREATE = 'create'
+    DELETE = 'delete'
+    UPDATE = 'update'
+
+
+class EsDocProperties(object):
+    INDEX = '_index'
+    TYPE = '_type'
+    PARENT = '_parent'
+    PRECOLATE = '_percolate'
+    ROUTING = '_routing'
+    TIMESTAMP = '_timestamp'
+    TTL = '_ttl'
+    VERSION = '_version'
+    VERSION_TYPE = '_version_type'
+    ID = '_id'
+    RETRY_ON_CONFLICT = '_retry_on_conflict'
+    SOURCE = '_source'
+
+
+
+
+
+
+
+
+
 # parts of URL to be omitted
 NULL_VALUES = (None, '', b'', [], ())

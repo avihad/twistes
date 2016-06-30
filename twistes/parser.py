@@ -1,5 +1,5 @@
-import urllib
-from urllib import quote
+from twistes.compatability import quote, urlencode
+
 
 from twistes.consts import NULL_VALUES
 
@@ -51,7 +51,7 @@ class EsParser(object):
         url = hostname + path
 
         if params:
-            url = url + '?' + urllib.urlencode(params)
+            url = url + '?' + urlencode(params)
 
         if not url.startswith(('http:', 'https:')):
             url = "http://" + url

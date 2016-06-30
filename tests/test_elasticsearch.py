@@ -1,5 +1,5 @@
 import json
-import urllib
+from twistes.compatability import urlencode
 
 from mock import MagicMock
 from twisted.internet.defer import inlineCallbacks
@@ -10,6 +10,8 @@ from twistes.client import Elasticsearch
 from twistes.consts import HttpMethod, EsConst, ResponseCodes, EsMethods
 from twistes.exceptions import NotFoundError, ConnectionTimeout
 from twistes.scroller import Scroller
+
+UTF_8_ENCODING = 'utf-8'
 
 FILED_2 = 'FILED_2'
 FILED_1 = 'FILED_1'
@@ -43,7 +45,7 @@ class TestElasticsearch(TestCase):
     def test_info(self):
         self.es._async_http_client.request = MagicMock(return_value=self.generate_response(ResponseCodes.OK))
         yield self.es.info()
-        expected_url = '{host}:{port}/'.format(host=SOME_HOST, port=SOME_PORT)
+        expected_url = '{host}:{port}/'.format(host=SOME_HOST, port=SOME_PORT).encode(UTF_8_ENCODING)
 
         self.es._async_http_client.request.assert_called_once_with(HttpMethod.GET, expected_url,
                                                                    auth=(SOME_USER, SOME_PASS), data=None,
@@ -54,7 +56,7 @@ class TestElasticsearch(TestCase):
         self.es._async_http_client.request = MagicMock(return_value=self.generate_response(ResponseCodes.OK))
         yield self.es.exists(SOME_INDEX, SOME_DOC_TYPE, id=SOME_ID)
         expected_url = '{host}:{port}/{index}/{doc_type}/{id}'.format(host=SOME_HOST, port=SOME_PORT, index=SOME_INDEX,
-                                                                      doc_type=SOME_DOC_TYPE, id=SOME_ID)
+                                                                      doc_type=SOME_DOC_TYPE, id=SOME_ID).encode(UTF_8_ENCODING)
 
         self.es._async_http_client.request.assert_called_once_with(HttpMethod.HEAD, expected_url,
                                                                    auth=(SOME_USER, SOME_PASS), data=None,
@@ -67,7 +69,7 @@ class TestElasticsearch(TestCase):
         expected_url = '{host}:{port}/{index}/{doc_type}/{id}/{method}'.format(host=SOME_HOST, port=SOME_PORT,
                                                                                index=SOME_INDEX,
                                                                                doc_type=SOME_DOC_TYPE, id=SOME_ID,
-                                                                               method=EsMethods.SOURCE)
+                                                                               method=EsMethods.SOURCE).encode(UTF_8_ENCODING)
 
         self.es._async_http_client.request.assert_called_once_with(HttpMethod.GET, expected_url,
                                                                    auth=(SOME_USER, SOME_PASS), data=None,
@@ -81,7 +83,7 @@ class TestElasticsearch(TestCase):
         expected_url = '{host}:{port}/{index}/{doc_type}/{method}'.format(host=SOME_HOST, port=SOME_PORT,
                                                                           index=SOME_INDEX,
                                                                           doc_type=SOME_DOC_TYPE, id=SOME_ID,
-                                                                          method=EsMethods.MULTIPLE_GET)
+                                                                          method=EsMethods.MULTIPLE_GET).encode(UTF_8_ENCODING)
 
         self.es._async_http_client.request.assert_called_once_with(HttpMethod.GET, expected_url,
                                                                    auth=(SOME_USER, SOME_PASS), data=json.dumps(query),
@@ -100,7 +102,7 @@ class TestElasticsearch(TestCase):
         expected_url = '{host}:{port}/{index}/{doc_type}/{id}/{method}'.format(host=SOME_HOST, port=SOME_PORT,
                                                                                index=SOME_INDEX,
                                                                                doc_type=SOME_DOC_TYPE, id=SOME_ID,
-                                                                               method=EsMethods.UPDATE)
+                                                                               method=EsMethods.UPDATE).encode(UTF_8_ENCODING)
 
         self.es._async_http_client.request.assert_called_once_with(HttpMethod.POST, expected_url,
                                                                    auth=(SOME_USER, SOME_PASS), data=json.dumps(query),
@@ -114,7 +116,7 @@ class TestElasticsearch(TestCase):
         expected_url = '{host}:{port}/{index}/{doc_type}/{id}/{method}'.format(host=SOME_HOST, port=SOME_PORT,
                                                                                index=SOME_INDEX,
                                                                                doc_type=SOME_DOC_TYPE, id=SOME_ID,
-                                                                               method=EsMethods.EXPLAIN)
+                                                                               method=EsMethods.EXPLAIN).encode(UTF_8_ENCODING)
 
         self.es._async_http_client.request.assert_called_once_with(HttpMethod.GET, expected_url,
                                                                    auth=(SOME_USER, SOME_PASS), data=json.dumps(query),
@@ -125,7 +127,7 @@ class TestElasticsearch(TestCase):
         self.es._async_http_client.request = MagicMock(return_value=self.generate_response(ResponseCodes.OK))
         yield self.es.get(SOME_INDEX, id=SOME_ID)
         expected_url = '{host}:{port}/{index}/{doc_type}/{id}'.format(host=SOME_HOST, port=SOME_PORT, index=SOME_INDEX,
-                                                                      doc_type=EsConst.ALL_VALUES, id=SOME_ID)
+                                                                      doc_type=EsConst.ALL_VALUES, id=SOME_ID).encode(UTF_8_ENCODING)
 
         self.es._async_http_client.request.assert_called_once_with(HttpMethod.GET, expected_url,
                                                                    auth=(SOME_USER, SOME_PASS), data=None,
@@ -138,7 +140,7 @@ class TestElasticsearch(TestCase):
         yield self.assertFailure(self.es.get(SOME_INDEX, id=SOME_ID), NotFoundError)
 
         expected_url = '{host}:{port}/{index}/{doc_type}/{id}'.format(host=SOME_HOST, port=SOME_PORT, index=SOME_INDEX,
-                                                                      doc_type=EsConst.ALL_VALUES, id=SOME_ID)
+                                                                      doc_type=EsConst.ALL_VALUES, id=SOME_ID).encode(UTF_8_ENCODING)
         self.es._async_http_client.request.assert_called_once_with(HttpMethod.GET, expected_url,
                                                                    auth=(SOME_USER, SOME_PASS), data=None,
                                                                    timeout=TIMEOUT)
@@ -162,8 +164,8 @@ class TestElasticsearch(TestCase):
         expected_url = '{host}:{port}/{index}/{doc_type}/{id}?{fileds}'.format(host=SOME_HOST, port=SOME_PORT,
                                                                                index=SOME_INDEX,
                                                                                doc_type=SOME_DOC_TYPE, id=SOME_ID,
-                                                                               fileds=urllib.urlencode(
-                                                                                   {EsConst.FIELDS: SOME_FIELDS}))
+                                                                               fileds=urlencode(
+                                                                                   {EsConst.FIELDS: SOME_FIELDS})).encode(UTF_8_ENCODING)
 
         self.es._async_http_client.request.assert_called_once_with(HttpMethod.GET, expected_url,
                                                                    auth=(SOME_USER, SOME_PASS), data=None,
@@ -183,7 +185,7 @@ class TestElasticsearch(TestCase):
         expected_url = '{host}:{port}/{index}/{doc_type}/{method}'.format(host=SOME_HOST, port=SOME_PORT,
                                                                           index=SOME_INDEX,
                                                                           doc_type=SOME_DOC_TYPE,
-                                                                          method=EsMethods.SEARCH)
+                                                                          method=EsMethods.SEARCH).encode(UTF_8_ENCODING)
         self.es._async_http_client.request.assert_called_once_with(HttpMethod.POST, expected_url,
                                                                    auth=(SOME_USER, SOME_PASS),
                                                                    data=json.dumps(some_search_query),
@@ -194,7 +196,7 @@ class TestElasticsearch(TestCase):
         self.es._async_http_client.request = MagicMock(return_value=self.generate_response(ResponseCodes.OK))
         yield self.es.delete(SOME_INDEX, SOME_DOC_TYPE, id=SOME_ID)
         expected_url = '{host}:{port}/{index}/{doc_type}/{id}'.format(host=SOME_HOST, port=SOME_PORT, index=SOME_INDEX,
-                                                                      doc_type=SOME_DOC_TYPE, id=SOME_ID)
+                                                                      doc_type=SOME_DOC_TYPE, id=SOME_ID).encode(UTF_8_ENCODING)
 
         self.es._async_http_client.request.assert_called_once_with(HttpMethod.DELETE, expected_url,
                                                                    auth=(SOME_USER, SOME_PASS),
@@ -207,7 +209,7 @@ class TestElasticsearch(TestCase):
         doc_to_index = {FILED_1: 'bla', FILED_2: 'bla2'}
         yield self.es.index(SOME_INDEX, SOME_DOC_TYPE, doc_to_index, id=SOME_ID)
         expected_url = '{host}:{port}/{index}/{doc_type}/{id}'.format(host=SOME_HOST, port=SOME_PORT, index=SOME_INDEX,
-                                                                      doc_type=SOME_DOC_TYPE, id=SOME_ID)
+                                                                      doc_type=SOME_DOC_TYPE, id=SOME_ID).encode(UTF_8_ENCODING)
 
         self.es._async_http_client.request.assert_called_once_with(HttpMethod.PUT, expected_url,
                                                                    auth=(SOME_USER, SOME_PASS),
@@ -220,7 +222,7 @@ class TestElasticsearch(TestCase):
         doc_to_index = {FILED_1: 'bla', FILED_2: 'bla2'}
         yield self.es.index(SOME_INDEX, SOME_DOC_TYPE, doc_to_index)
         expected_url = '{host}:{port}/{index}/{doc_type}'.format(host=SOME_HOST, port=SOME_PORT, index=SOME_INDEX,
-                                                                 doc_type=SOME_DOC_TYPE)
+                                                                 doc_type=SOME_DOC_TYPE).encode(UTF_8_ENCODING)
 
         self.es._async_http_client.request.assert_called_once_with(HttpMethod.POST, expected_url,
                                                                    auth=(SOME_USER, SOME_PASS),
@@ -257,7 +259,7 @@ class TestElasticsearch(TestCase):
         self.es._async_http_client.request = MagicMock(return_value=self.generate_response(ResponseCodes.OK))
         scroll_id = '12345'
         yield self.es.scroll(scroll_id)
-        expected_url = '{host}:{port}{method}'.format(host=SOME_HOST, port=SOME_PORT, method=EsMethods.SCROLL)
+        expected_url = '{host}:{port}{method}'.format(host=SOME_HOST, port=SOME_PORT, method=EsMethods.SCROLL).encode(UTF_8_ENCODING)
         self.es._async_http_client.request.assert_called_once_with(HttpMethod.GET, expected_url,
                                                                    auth=(SOME_USER, SOME_PASS),
                                                                    data=scroll_id,
@@ -268,7 +270,7 @@ class TestElasticsearch(TestCase):
         self.es._async_http_client.request = MagicMock(return_value=self.generate_response(ResponseCodes.OK))
         scroll_id = '12345'
         yield self.es.clear_scroll(scroll_id)
-        expected_url = '{host}:{port}{method}'.format(host=SOME_HOST, port=SOME_PORT, method=EsMethods.SCROLL)
+        expected_url = '{host}:{port}{method}'.format(host=SOME_HOST, port=SOME_PORT, method=EsMethods.SCROLL).encode(UTF_8_ENCODING)
         self.es._async_http_client.request.assert_called_once_with(HttpMethod.DELETE, expected_url,
                                                                    auth=(SOME_USER, SOME_PASS),
                                                                    data=scroll_id,
@@ -298,7 +300,7 @@ class TestElasticsearch(TestCase):
         expected_url = '{host}:{port}/{index}/{doc_type}/{method}'.format(host=SOME_HOST, port=SOME_PORT,
                                                                           index=SOME_INDEX,
                                                                           doc_type=SOME_DOC_TYPE,
-                                                                          method=EsMethods.COUNT)
+                                                                          method=EsMethods.COUNT).encode(UTF_8_ENCODING)
         self.es._async_http_client.request.assert_called_once_with(HttpMethod.GET, expected_url,
                                                                    auth=(SOME_USER, SOME_PASS),
                                                                    data=json.dumps(some_search_query),
@@ -313,7 +315,7 @@ class TestElasticsearch(TestCase):
         expected_url = '{host}:{port}/{index}/{doc_type}/{method}'.format(host=SOME_HOST, port=SOME_PORT,
                                                                           index=SOME_INDEX,
                                                                           doc_type=SOME_DOC_TYPE,
-                                                                          method=EsMethods.BULK)
+                                                                          method=EsMethods.BULK).encode(UTF_8_ENCODING)
         expected_body='{q1}\n{q2}\n'.format(q1=json.dumps(index_query1), q2=json.dumps(index_query2))
         self.es._async_http_client.request.assert_called_once_with(HttpMethod.POST, expected_url,
                                                                    auth=(SOME_USER, SOME_PASS),
@@ -329,7 +331,7 @@ class TestElasticsearch(TestCase):
         expected_url = '{host}:{port}/{index}/{doc_type}/{method}'.format(host=SOME_HOST, port=SOME_PORT,
                                                                           index=SOME_INDEX,
                                                                           doc_type=SOME_DOC_TYPE,
-                                                                          method=EsMethods.MULTIPLE_SEARCH)
+                                                                          method=EsMethods.MULTIPLE_SEARCH).encode(UTF_8_ENCODING)
         expected_body='{q1}\n{q2}\n'.format(q1=json.dumps(search_query1), q2=json.dumps(search_query2))
         self.es._async_http_client.request.assert_called_once_with(HttpMethod.GET, expected_url,
                                                                    auth=(SOME_USER, SOME_PASS),
