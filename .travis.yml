@@ -6,7 +6,7 @@ python:
 
 
 install:
-  - pip install tox python-coveralls
+  - pip install tox-travis python-coveralls
 
 # command to run tests
 script:
