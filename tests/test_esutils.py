@@ -47,5 +47,6 @@ class TestEsUtils(TestCase):
                 }}
 
     def test_is_get_query_with_results_valid_response_returns_true(self):
-        es_get_response = {"_type": "type", "_index": "index", "fields": {}, "_version": 1, "found": True, "_id": "id"}
+        es_get_response = {EsConst._TYPE: "type", EsConst._INDEX: "index", EsConst.FIELDS: {},
+                           EsConst._VERSION: 1, EsConst.FOUND: True, EsConst._ID: "id"}
         self.assertTrue(EsUtils.is_get_query_with_results(es_get_response))
