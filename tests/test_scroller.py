@@ -8,6 +8,7 @@ from twistes.scroller import Scroller
 SOME_VALUE_1 = "SOME_VALUE_1"
 SOME_VALUE_2 = "SOME_VALUE_2"
 SOME_ID = "SOME_ID"
+SOME_SCROLL = "2m"
 
 
 class TestScroller(TestCase):
@@ -15,7 +16,7 @@ class TestScroller(TestCase):
     def test_scroll_return_results(self):
         expected_results = [{SOME_VALUE_1: SOME_VALUE_2}]
         some_results = self.wrap_good_result(expected_results, SOME_ID)
-        scroller = Scroller(MagicMock(), some_results)
+        scroller = Scroller(MagicMock(), some_results, SOME_SCROLL)
         results = yield scroller.next()
         self.assertEqual(expected_results, results)
 
@@ -27,11 +28,11 @@ class TestScroller(TestCase):
         expected_results = [{SOME_VALUE_2: SOME_VALUE_1}]
         es = MagicMock()
         es.scroll = MagicMock(return_value=self.wrap_good_result(expected_results, scroll_id))
-        scroller = Scroller(es, some_results1)
+        scroller = Scroller(es, some_results1, SOME_SCROLL)
         yield scroller.next()
         results = yield scroller.next()
         self.assertEqual(results, expected_results)
-        es.scroll.assert_called_once_with(scroll_id)
+        es.scroll.assert_called_once_with(scroll_id, scroll=SOME_SCROLL)
 
     @inlineCallbacks
     def test_scroll_iterator(self):
@@ -42,7 +43,7 @@ class TestScroller(TestCase):
         expected_result_2 = [{SOME_VALUE_2: SOME_VALUE_1}]
         es = MagicMock()
         es.scroll = MagicMock(return_value=self.wrap_good_result(expected_result_2, None))
-        scroller = Scroller(es, es_results_1)
+        scroller = Scroller(es, es_results_1, SOME_SCROLL)
 
         results = []
         for defer_results in scroller:
@@ -54,7 +55,7 @@ class TestScroller(TestCase):
     def test_scroll_end_of_scan_when_scroll_id_is_none(self):
         expected_results = [{SOME_VALUE_1: SOME_VALUE_2}]
         some_results = self.wrap_good_result(expected_results, None)
-        scroller = Scroller(MagicMock(), some_results)
+        scroller = Scroller(MagicMock(), some_results, SOME_SCROLL)
         scroller.next()
         self.assertRaises(StopIteration, scroller.next)
 

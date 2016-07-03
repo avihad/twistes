@@ -442,7 +442,7 @@ class Elasticsearch(object):
         # initial search
         results = yield self.search(index=index, doc_type=doc_type, body=query, scroll=scroll, **kwargs)
 
-        returnValue(Scroller(self, results))
+        returnValue(Scroller(self, results, scroll))
 
     @inlineCallbacks
     def count(self, index=None, doc_type=None, body=None, **query_params):
