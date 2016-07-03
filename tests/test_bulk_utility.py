@@ -12,7 +12,7 @@ from twistes.exceptions import BulkIndexError, ConnectionTimeout
 
 SOME_INDEX = "some_index"
 SOME_DOC_TYPE = "some_doc_type"
-SOME_DOC = {"filed1": "value1", "field2": "value2"}
+SOME_DOC = {"field1": "value1", "field2": "value2"}
 SOME_ID = "some_id"
 
 ERROR_MSG = "error_msg"

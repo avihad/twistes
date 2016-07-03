@@ -1,6 +1,6 @@
 from twisted.internet.defer import succeed, inlineCallbacks, returnValue
 
-from twistes.consts import EsConst
+from twistes.consts import EsDocProperties
 from twistes.utilities import EsUtils
 
 
@@ -20,7 +20,7 @@ class Scroller(object):
 
     def __init__(self, es, results):
         self._first_results = results
-        self._scroll_id = results.get(EsConst.UNDERSCORE_SCROLL_ID, None)
+        self._scroll_id = results.get(EsDocProperties.SCROLL_ID, None)
         self._es = es
 
     def __iter__(self):
@@ -44,6 +44,6 @@ class Scroller(object):
     @inlineCallbacks
     def scroll_next_results(self):
         results = yield self._es.scroll(str(self._scroll_id))
-        self._scroll_id = results.get(EsConst.UNDERSCORE_SCROLL_ID, None)
+        self._scroll_id = results.get(EsDocProperties.SCROLL_ID, None)
         returnValue(EsUtils.extract_hits(results))
 

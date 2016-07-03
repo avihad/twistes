@@ -23,7 +23,7 @@ class EsMethods(object):
     UPDATE = '_update'
     SOURCE = '_source'
     SEARCH = '_search'
-    SCROLL = '/_search/scroll'
+    SCROLL = '_search/scroll'
 
 
 class EsConst(object):
@@ -33,7 +33,6 @@ class EsConst(object):
     ALL_VALUES = '_all'
     FIELDS = 'fields'
     SCROLL_ID = 'scroll_id'
-    UNDERSCORE_SCROLL_ID = '_scroll_id'
     HITS = 'hits'
 
 
@@ -49,7 +48,7 @@ class EsDocProperties(object):
     INDEX = '_index'
     TYPE = '_type'
     PARENT = '_parent'
-    PRECOLATE = '_percolate'
+    PERCOLATE = '_percolate'
     ROUTING = '_routing'
     TIMESTAMP = '_timestamp'
     TTL = '_ttl'
@@ -58,6 +57,7 @@ class EsDocProperties(object):
     ID = '_id'
     RETRY_ON_CONFLICT = '_retry_on_conflict'
     SOURCE = '_source'
+    SCROLL_ID = '_scroll_id'
 
 
 

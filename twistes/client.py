@@ -379,7 +379,8 @@ class Elasticsearch(object):
         elif scroll_id:
             query_params[EsConst.SCROLL_ID] = scroll_id
 
-        result = yield self._perform_request(HttpMethod.GET, EsMethods.SCROLL, body, params=query_params)
+        path = self._es_parser.make_path(EsMethods.SCROLL)
+        result = yield self._perform_request(HttpMethod.GET, path, body, params=query_params)
         returnValue(result)
 
     @inlineCallbacks
@@ -399,7 +400,8 @@ class Elasticsearch(object):
         elif scroll_id:
             query_params[EsConst.SCROLL_ID] = scroll_id
 
-        result = yield self._perform_request(HttpMethod.DELETE, EsMethods.SCROLL, body, params=query_params)
+        path = self._es_parser.make_path(EsMethods.SCROLL)
+        result = yield self._perform_request(HttpMethod.DELETE, path, body, params=query_params)
         returnValue(result)
 
     @inlineCallbacks

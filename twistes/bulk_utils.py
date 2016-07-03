@@ -9,12 +9,18 @@ from twistes.exceptions import BulkIndexError, ConnectionTimeout
 
 
 class ActionParser(object):
+    ES_OPERATIONS_PARAMS = (
+        EsDocProperties.INDEX, EsDocProperties.PARENT, EsDocProperties.PERCOLATE, EsDocProperties.ROUTING,
+        EsDocProperties.TIMESTAMP, EsDocProperties.TTL, EsDocProperties.TYPE, EsDocProperties.VERSION,
+        EsDocProperties.VERSION_TYPE, EsDocProperties.ID, EsDocProperties.RETRY_ON_CONFLICT)
+
     @staticmethod
     def expand_action(data):
         """
         From one document or action definition passed in by the user extract the
         action/data lines needed for elasticsearch's
         :meth:`~elasticsearch.Elasticsearch.bulk` api.
+        :return es format to bulk doc
         """
         # when given a string, assume user wants to index raw json
         if isinstance(data, string_types):
@@ -23,19 +29,23 @@ class ActionParser(object):
         # make sure we don't alter the action
         data = data.copy()
         op_type = data.pop(EsBulk.OP_TYPE, EsBulk.INDEX)
-        action = {op_type: {}}
-        for key in (EsDocProperties.INDEX, EsDocProperties.PARENT, EsDocProperties.PRECOLATE,
-                    EsDocProperties.ROUTING, EsDocProperties.TIMESTAMP, EsDocProperties.TTL,
-                    EsDocProperties.TYPE, EsDocProperties.VERSION, EsDocProperties.VERSION_TYPE,
-                    EsDocProperties.ID, EsDocProperties.RETRY_ON_CONFLICT):
-            if key in data:
-                action[op_type][key] = data.pop(key)
+
+        action = ActionParser._get_relevant_action_params(data, op_type)
 
         # no data payload for delete
         if op_type == EsBulk.DELETE:
             return action, None
 
         return action, data.get(EsDocProperties.SOURCE, data)
+
+    @staticmethod
+    def _get_relevant_action_params(data, op_type):
+        action = {op_type: {}}
+        for key in ActionParser.ES_OPERATIONS_PARAMS:
+            if key in data:
+                action[op_type][key] = data.pop(key)
+
+        return action
 
 
 class BulkUtility(object):
@@ -52,7 +62,6 @@ class BulkUtility(object):
         errors or number of errors if `stats_only` is set to `True`.
         See :func:`~elasticsearch.helpers.streaming_bulk` for more accepted
         parameters
-        :arg client: instance of :class:`~elasticsearch.Elasticsearch` to use
         :arg actions: iterator containing the actions
         :arg stats_only: if `True` only report number of successful/failed
             operations instead of just number of successful and a list of error responses
@@ -86,7 +95,6 @@ class BulkUtility(object):
         :func:`~elasticsearch.helpers.bulk` which is a wrapper around streaming
         bulk that returns summary information about the bulk operation once the
         entire input is consumed and sent.
-        :arg client: instance of :class:`~elasticsearch.Elasticsearch` to use
         :arg actions: iterable containing the actions to be executed
         :arg chunk_size: number of docs in one chunk sent to es (default: 500)
         :arg max_chunk_bytes: the maximum size of the request in bytes (default: 100MB)
@@ -141,6 +149,7 @@ class BulkUtility(object):
         """
         # if raise on error is set, we need to collect errors per chunk before raising them
 
+        resp = None
         try:
             # send the actual request
             resp = yield self.client.bulk('\n'.join(bulk_actions) + '\n', **kwargs)
