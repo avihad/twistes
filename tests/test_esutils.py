@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from twistes.consts import EsConst
+from twistes.consts import EsConst, EsDocProperties
 from twistes.exceptions import ScanError
 from twistes.utilities import EsUtils
 
@@ -14,7 +14,7 @@ class TestEsUtils(TestCase):
         self.assertEqual(result_hits, extracted_results)
 
     def test_extract_hits_bad_results(self):
-        not_hits_results = {EsConst.UNDERSCORE_SCROLL_ID: 12345,
+        not_hits_results = {EsDocProperties.SCROLL_ID: 12345,
                             EsConst.SHARDS: {
                                 EsConst.FAILED: 0,
                                 EsConst.TOTAL: 2
@@ -28,7 +28,7 @@ class TestEsUtils(TestCase):
         self.assertTrue(EsUtils.has_results(good_result))
 
     def test_has_results_invalid_results(self):
-        invalid_result = {EsConst.UNDERSCORE_SCROLL_ID: 12345}
+        invalid_result = {EsDocProperties.SCROLL_ID: 12345}
         self.assertFalse(EsUtils.has_results(invalid_result))
 
     def test_validate_scan_result_shard_failed(self):
@@ -38,7 +38,7 @@ class TestEsUtils(TestCase):
 
     @staticmethod
     def create_results(result_hits, failures=0):
-        return {EsConst.UNDERSCORE_SCROLL_ID: 12345,
+        return {EsDocProperties.SCROLL_ID: 12345,
                 EsConst.HITS: {
                     EsConst.HITS: result_hits,
                     EsConst.TOTAL: 2

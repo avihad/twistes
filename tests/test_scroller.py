@@ -2,7 +2,7 @@ from mock import MagicMock
 from twisted.internet.defer import inlineCallbacks
 from twisted.trial.unittest import TestCase
 
-from twistes.consts import EsConst
+from twistes.consts import EsConst, EsDocProperties
 from twistes.scroller import Scroller
 
 SOME_VALUE_1 = "SOME_VALUE_1"
@@ -60,7 +60,7 @@ class TestScroller(TestCase):
 
     @staticmethod
     def wrap_good_result(expected_results, scroll_id):
-        return {EsConst.UNDERSCORE_SCROLL_ID: scroll_id,
+        return {EsDocProperties.SCROLL_ID: scroll_id,
                 EsConst.HITS: {
                     EsConst.HITS: expected_results,
                     EsConst.TOTAL: 2
