@@ -59,13 +59,5 @@ class EsDocProperties(object):
     SOURCE = '_source'
     SCROLL_ID = '_scroll_id'
 
-
-
-
-
-
-
-
-
 # parts of URL to be omitted
 NULL_VALUES = (None, '', b'', [], ())
