@@ -82,7 +82,8 @@ class TestElasticsearch(TestCase):
     def test_get_source(self):
         self.es._async_http_client.request = MagicMock(return_value=self.generate_response(ResponseCodes.OK))
         yield self.es.get_source(SOME_INDEX, SOME_DOC_TYPE, id=SOME_ID)
-        expected_url = self._generate_url(SOME_HOST, SOME_PORT, None, SOME_INDEX, SOME_DOC_TYPE, SOME_ID, EsMethods.SOURCE)
+        expected_url = self._generate_url(SOME_HOST, SOME_PORT, None, SOME_INDEX, SOME_DOC_TYPE, SOME_ID,
+                                          EsMethods.SOURCE)
 
         self.es._async_http_client.request.assert_called_once_with(HttpMethod.GET, expected_url,
                                                                    auth=(SOME_USER, SOME_PASS), data=None,
@@ -109,7 +110,8 @@ class TestElasticsearch(TestCase):
         self.es._async_http_client.request = MagicMock(return_value=self.generate_response(ResponseCodes.OK))
         query = {'name': 'joseph', 'last_name': 'smith'}
         yield self.es.update(index=SOME_INDEX, doc_type=SOME_DOC_TYPE, id=SOME_ID, body=query)
-        expected_url = self._generate_url(SOME_HOST, SOME_PORT, None, SOME_INDEX, SOME_DOC_TYPE, SOME_ID, EsMethods.UPDATE)
+        expected_url = self._generate_url(SOME_HOST, SOME_PORT, None, SOME_INDEX, SOME_DOC_TYPE, SOME_ID,
+                                          EsMethods.UPDATE)
 
         self.es._async_http_client.request.assert_called_once_with(HttpMethod.POST, expected_url,
                                                                    auth=(SOME_USER, SOME_PASS), data=json.dumps(query),
@@ -120,7 +122,8 @@ class TestElasticsearch(TestCase):
         self.es._async_http_client.request = MagicMock(return_value=self.generate_response(ResponseCodes.OK))
         query = {'name': 'joseph', 'last_name': 'smith'}
         yield self.es.explain(index=SOME_INDEX, doc_type=SOME_DOC_TYPE, id=SOME_ID, body=query)
-        expected_url = self._generate_url(SOME_HOST, SOME_PORT, None, SOME_INDEX, SOME_DOC_TYPE, SOME_ID, EsMethods.EXPLAIN)
+        expected_url = self._generate_url(SOME_HOST, SOME_PORT, None, SOME_INDEX, SOME_DOC_TYPE, SOME_ID,
+                                          EsMethods.EXPLAIN)
 
         self.es._async_http_client.request.assert_called_once_with(HttpMethod.GET, expected_url,
                                                                    auth=(SOME_USER, SOME_PASS), data=json.dumps(query),
@@ -253,8 +256,7 @@ class TestElasticsearch(TestCase):
         self.es._async_http_client.request = MagicMock(return_value=self.generate_response(ResponseCodes.OK))
         scroll_id = '12345'
         yield self.es.scroll(scroll_id)
-        expected_url = self._generate_url(SOME_HOST, SOME_PORT, None, EsMethods.SCROLL)
-        expected_url = '{host}:{port}/{method}'.format(host=SOME_HOST, port=SOME_PORT, method=quote(EsMethods.SCROLL, '')).encode('utf-8')
+        expected_url = self._generate_url(SOME_HOST, SOME_PORT, None, EsMethods.SEARCH, EsMethods.SCROLL)
         self.es._async_http_client.request.assert_called_once_with(HttpMethod.GET, expected_url,
                                                                    auth=(SOME_USER, SOME_PASS),
                                                                    data=scroll_id,
@@ -265,8 +267,7 @@ class TestElasticsearch(TestCase):
         self.es._async_http_client.request = MagicMock(return_value=self.generate_response(ResponseCodes.OK))
         scroll_id = '12345'
         yield self.es.clear_scroll(scroll_id)
-
-        expected_url = '{host}:{port}/{method}'.format(host=SOME_HOST, port=SOME_PORT, method=quote(EsMethods.SCROLL, '')).encode('utf-8')
+        expected_url = self._generate_url(SOME_HOST, SOME_PORT, None, EsMethods.SEARCH, EsMethods.SCROLL)
         self.es._async_http_client.request.assert_called_once_with(HttpMethod.DELETE, expected_url,
                                                                    auth=(SOME_USER, SOME_PASS),
                                                                    data=scroll_id,
@@ -308,7 +309,7 @@ class TestElasticsearch(TestCase):
         yield self.es.bulk([index_query1, index_query2], SOME_INDEX, SOME_DOC_TYPE)
         expected_url = self._generate_url(SOME_HOST, SOME_PORT, None, SOME_INDEX, SOME_DOC_TYPE, EsMethods.BULK)
 
-        expected_body='{q1}\n{q2}\n'.format(q1=json.dumps(index_query1), q2=json.dumps(index_query2))
+        expected_body = '{q1}\n{q2}\n'.format(q1=json.dumps(index_query1), q2=json.dumps(index_query2))
         self.es._async_http_client.request.assert_called_once_with(HttpMethod.POST, expected_url,
                                                                    auth=(SOME_USER, SOME_PASS),
                                                                    data=expected_body,
@@ -317,12 +318,13 @@ class TestElasticsearch(TestCase):
     @inlineCallbacks
     def test_msearch_list(self):
         self.es._async_http_client.request = MagicMock(return_value=self.generate_response(ResponseCodes.OK))
-        search_query1 = {'query': {'match':{FIELD_1: "blabla1"}}}
-        search_query2 = {'query': {'match':{FIELD_1: "blabla2"}}}
+        search_query1 = {'query': {'match': {FIELD_1: "blabla1"}}}
+        search_query2 = {'query': {'match': {FIELD_1: "blabla2"}}}
         yield self.es.msearch([search_query1, search_query2], SOME_INDEX, SOME_DOC_TYPE)
-        expected_url = self._generate_url(SOME_HOST, SOME_PORT, None, SOME_INDEX, SOME_DOC_TYPE, EsMethods.MULTIPLE_SEARCH)
+        expected_url = self._generate_url(SOME_HOST, SOME_PORT, None, SOME_INDEX, SOME_DOC_TYPE,
+                                          EsMethods.MULTIPLE_SEARCH)
 
-        expected_body='{q1}\n{q2}\n'.format(q1=json.dumps(search_query1), q2=json.dumps(search_query2))
+        expected_body = '{q1}\n{q2}\n'.format(q1=json.dumps(search_query1), q2=json.dumps(search_query2))
         self.es._async_http_client.request.assert_called_once_with(HttpMethod.GET, expected_url,
                                                                    auth=(SOME_USER, SOME_PASS),
                                                                    data=expected_body,

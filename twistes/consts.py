@@ -23,7 +23,7 @@ class EsMethods(object):
     UPDATE = '_update'
     SOURCE = '_source'
     SEARCH = '_search'
-    SCROLL = '_search/scroll'
+    SCROLL = 'scroll'
 
 
 class EsConst(object):
