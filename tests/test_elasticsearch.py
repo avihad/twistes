@@ -63,7 +63,7 @@ class TestElasticsearch(TestCase):
     def _generate_url(host, port, uri_params, *args):
         """
         Generate the elastic search url in the format
-            <host>:<port>/<sub path 1>/.../<sub path n>?<param 1>?...?<param n>
+            <host>:<port>/<sub path 1>/.../<sub path n>?<param 1>&...&<param n>
             where the sub paths is from kwargs and the params is from uri_params list
         :param host: the hostname
         :param port: port

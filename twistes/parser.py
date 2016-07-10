@@ -41,43 +41,54 @@ class EsParser(object):
         if isinstance(hosts, string_types):
             hosts = [hosts]
 
-        out = []
-        # normalize hosts to dicts
-        for host in hosts:
-            if isinstance(host, string_types):
-                host = EsParser._fix_host_prefix(host)
+        return list(map(EsParser._normalize_host, hosts))
 
-                parsed_url = urlparse(host)
-                h = {HostParsing.HOST: parsed_url.hostname}
+    @staticmethod
+    def _normalize_host(host):
+        if isinstance(host, string_types):
+            return EsParser._parse_string_host(host)
+        else:
+            return EsParser._update_ssl_params(host)
 
-                if parsed_url.port:
-                    h[HostParsing.PORT] = parsed_url.port
+    @staticmethod
+    def _update_ssl_params(host):
+        """
+        Update the host ssl params (port or scheme) if needed.
+        :param host:
+        :return:
+        """
+        if host[HostParsing.HOST] \
+                and EsParser._is_secure_connection_type(host):
+            host[HostParsing.PORT] = EsParser.SSL_DEFAULT_PORT
+            host[HostParsing.USE_SSL] = True
+            parsed_url = urlparse(EsParser._fix_host_prefix(host[HostParsing.HOST]))
+            host[HostParsing.HOST] = parsed_url.hostname
+            host[HostParsing.SCHEME] = HostParsing.HTTPS
+        return host
 
-                if parsed_url.scheme == HostParsing.HTTPS:
-                    h[HostParsing.PORT] = parsed_url.port or EsParser.SSL_DEFAULT_PORT
-                    h[HostParsing.USE_SSL] = True
-                    h[HostParsing.SCHEME] = HostParsing.HTTPS
-                elif parsed_url.scheme:
-                    h[HostParsing.SCHEME] = parsed_url.scheme
-
-                if parsed_url.username or parsed_url.password:
-                    h[HostParsing.HTTP_AUTH] = '%s:%s' % (parsed_url.username, parsed_url.password)
-
-                if parsed_url.path and parsed_url.path != '/':
-                    h[HostParsing.URL_PREFIX] = parsed_url.path
-
-                out.append(h)
-            else:
-                if host[HostParsing.HOST] \
-                        and EsParser._is_secure_connection_type(host):
-                    host[HostParsing.PORT] = EsParser.SSL_DEFAULT_PORT
-                    host[HostParsing.USE_SSL] = True
-                    parsed_url = urlparse(EsParser._fix_host_prefix(host[HostParsing.HOST]))
-                    host[HostParsing.HOST] = parsed_url.hostname
-                    host[HostParsing.SCHEME] = HostParsing.HTTPS
-
-                out.append(host)
-        return out
+    @staticmethod
+    def _parse_string_host(host_str):
+        """
+        Parse host string into a dictionary host
+        :param host_str:
+        :return:
+        """
+        host_str = EsParser._fix_host_prefix(host_str)
+        parsed_url = urlparse(host_str)
+        host = {HostParsing.HOST: parsed_url.hostname}
+        if parsed_url.port:
+            host[HostParsing.PORT] = parsed_url.port
+        if parsed_url.scheme == HostParsing.HTTPS:
+            host[HostParsing.PORT] = parsed_url.port or EsParser.SSL_DEFAULT_PORT
+            host[HostParsing.USE_SSL] = True
+            host[HostParsing.SCHEME] = HostParsing.HTTPS
+        elif parsed_url.scheme:
+            host[HostParsing.SCHEME] = parsed_url.scheme
+        if parsed_url.username or parsed_url.password:
+            host[HostParsing.HTTP_AUTH] = '%s:%s' % (parsed_url.username, parsed_url.password)
+        if parsed_url.path and parsed_url.path != '/':
+            host[HostParsing.URL_PREFIX] = parsed_url.path
+        return host
 
     @staticmethod
     def _fix_host_prefix(host):
