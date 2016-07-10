@@ -4,7 +4,6 @@ from twistes.consts import NULL_VALUES, HostParsing
 
 
 class EsParser(object):
-
     SSL_DEFAULT_PORT = 443
 
     @staticmethod
@@ -28,7 +27,7 @@ class EsParser(object):
             auth = (user_pass[0], user_pass[1])
 
         full_host = "{host}:{port}".format(host=host_name, port=host_port)
-        if not host_name.startswith((HostParsing.HTTP + ':' , HostParsing.HTTPS + ':')):
+        if not host_name.startswith((HostParsing.HTTP + ':', HostParsing.HTTPS + ':')):
             scheme = HostParsing.HTTPS if host.get(HostParsing.USE_SSL) else HostParsing.HTTP
             full_host = "{scheme}://{full_host}".format(full_host=full_host, scheme=scheme)
 
@@ -71,15 +70,20 @@ class EsParser(object):
                 out.append(h)
             else:
                 if host[HostParsing.HOST] \
-                        and HostParsing.HTTPS in host[HostParsing.HOST] \
-                        and not host.get(HostParsing.PORT):
+                        and EsParser._is_secure_connection_type(host):
                     host[HostParsing.PORT] = EsParser.SSL_DEFAULT_PORT
                     host[HostParsing.USE_SSL] = True
                     parsed_url = urlparse(host[HostParsing.HOST])
                     host[HostParsing.HOST] = parsed_url.hostname
+                    host[HostParsing.SCHEME] = HostParsing.HTTPS
 
                 out.append(host)
         return out
+
+    @staticmethod
+    def _is_secure_connection_type(host):
+        return (HostParsing.HTTPS in host[HostParsing.HOST] and not host.get(HostParsing.PORT)) \
+                or (HostParsing.HTTPS not in host[HostParsing.HOST] and host.get(HostParsing.PORT, 0) == 443)
 
     @staticmethod
     def make_path(*sub_paths):
