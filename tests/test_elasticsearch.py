@@ -73,7 +73,7 @@ class TestElasticsearch(TestCase):
         """
         fields = ''
         if uri_params:
-            fields = '?' + '?'.join(map(urlencode, uri_params))
+            fields = '?' + '&'.join(map(urlencode, uri_params))
 
         path = '/'.join([quote(c, '') for c in args])
         return '{host}:{port}/{path}{fields}'.format(host=host, port=port, path=path, fields=fields).encode('utf-8')
