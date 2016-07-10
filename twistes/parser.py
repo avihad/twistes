@@ -45,8 +45,7 @@ class EsParser(object):
         # normalize hosts to dicts
         for host in hosts:
             if isinstance(host, string_types):
-                if '://' not in host:
-                    host = "//%s" % host
+                host = EsParser._fix_host_prefix(host)
 
                 parsed_url = urlparse(host)
                 h = {HostParsing.HOST: parsed_url.hostname}
@@ -73,12 +72,18 @@ class EsParser(object):
                         and EsParser._is_secure_connection_type(host):
                     host[HostParsing.PORT] = EsParser.SSL_DEFAULT_PORT
                     host[HostParsing.USE_SSL] = True
-                    parsed_url = urlparse(host[HostParsing.HOST])
+                    parsed_url = urlparse(EsParser._fix_host_prefix(host[HostParsing.HOST]))
                     host[HostParsing.HOST] = parsed_url.hostname
                     host[HostParsing.SCHEME] = HostParsing.HTTPS
 
                 out.append(host)
         return out
+
+    @staticmethod
+    def _fix_host_prefix(host):
+        if '://' not in host:
+            host = "//%s" % host
+        return host
 
     @staticmethod
     def _is_secure_connection_type(host):

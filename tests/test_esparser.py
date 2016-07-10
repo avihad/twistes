@@ -41,10 +41,15 @@ class TestEsParser(TestCase):
 
     def test_parse_host_https_without_port(self):
         full_host, auth = EsParser.parse_host(
-            [{HostParsing.HOST: '{scheme}://{url}'.format(scheme=HTTPS_SCHEME,
-                                                                          user=SOME_USER,
-                                                                          passwd=SOME_PASS,
-                                                                          url=SOME_URL)}])
+            [{HostParsing.HOST: '{scheme}://{url}'.format(scheme=HTTPS_SCHEME, url=SOME_URL)}])
+
+        self.assertEqual('443', full_host[-3:])
+        self.assertEqual(HostParsing.HTTPS, full_host[0:5])
+        self.assertEqual(SOME_URL, full_host[8:-4])
+
+    def test_parse_host_ssl_port_without_https(self):
+        full_host, auth = EsParser.parse_host(
+            [{HostParsing.HOST: SOME_URL, HostParsing.PORT: 443}])
 
         self.assertEqual('443', full_host[-3:])
         self.assertEqual(HostParsing.HTTPS, full_host[0:5])
