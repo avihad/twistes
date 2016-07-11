@@ -13,6 +13,13 @@ class EsUtils(object):
             return []
 
     @staticmethod
+    def extract_total_number_of_hits(results):
+        if EsUtils.has_results(results):
+            return results[EsConst.HITS][EsConst.TOTAL]
+        else:
+            return 0
+
+    @staticmethod
     def has_results(results):
         return results and \
                EsConst.HITS in results and \

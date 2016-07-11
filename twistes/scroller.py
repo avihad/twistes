@@ -45,6 +45,13 @@ class Scroller(object):
     @inlineCallbacks
     def scroll_next_results(self):
         results = yield self._es.scroll(str(self._scroll_id), scroll=self.scroll)
-        self._scroll_id = results.get(EsDocProperties.SCROLL_ID, None)
-        returnValue(EsUtils.extract_hits(results))
+        hits = EsUtils.extract_hits(results)
+        total_number_of_hits = EsUtils.extract_total_number_of_hits(results)
 
+        # No more results
+        if len(hits) < total_number_of_hits:
+            self._scroll_id = None
+        else:
+            self._scroll_id = results.get(EsDocProperties.SCROLL_ID, None)
+
+        returnValue(hits)
