@@ -41,10 +41,6 @@ class EsConst(object):
     TOTAL = 'total'
     FAILED = 'failed'
     SHARDS = '_shards'
-    _INDEX = "_index"
-    _TYPE = "_type"
-    _VERSION = "_version"
-    _ID = "_id"
     ALL_VALUES = '_all'
     FIELDS = 'fields'
     SCROLL_ID = 'scroll_id'
