@@ -14,6 +14,17 @@ class ResponseCodes(object):
     NOT_FOUND = 404
 
 
+class HostParsing(object):
+    HTTP = 'http'
+    HTTPS = 'https'
+    USE_SSL = 'use_ssl'
+    URL_PREFIX = 'url_prefix'
+    SCHEME = 'scheme'
+    HTTP_AUTH = 'http_auth'
+    PORT = 'port'
+    HOST = 'host'
+
+
 class EsMethods(object):
     MULTIPLE_SEARCH = '_msearch'
     BULK = '_bulk'
@@ -23,7 +34,7 @@ class EsMethods(object):
     UPDATE = '_update'
     SOURCE = '_source'
     SEARCH = '_search'
-    SCROLL = '/_search/scroll'
+    SCROLL = 'scroll'
 
 
 class EsConst(object):
@@ -37,10 +48,32 @@ class EsConst(object):
     ALL_VALUES = '_all'
     FIELDS = 'fields'
     SCROLL_ID = 'scroll_id'
-    UNDERSCORE_SCROLL_ID = '_scroll_id'
     HITS = 'hits'
     FOUND = 'found'
 
+
+class EsBulk(object):
+    OP_TYPE = '_op_type'
+    INDEX = 'index'
+    CREATE = 'create'
+    DELETE = 'delete'
+    UPDATE = 'update'
+
+
+class EsDocProperties(object):
+    INDEX = '_index'
+    TYPE = '_type'
+    PARENT = '_parent'
+    PERCOLATE = '_percolate'
+    ROUTING = '_routing'
+    TIMESTAMP = '_timestamp'
+    TTL = '_ttl'
+    VERSION = '_version'
+    VERSION_TYPE = '_version_type'
+    ID = '_id'
+    RETRY_ON_CONFLICT = '_retry_on_conflict'
+    SOURCE = '_source'
+    SCROLL_ID = '_scroll_id'
 
 # parts of URL to be omitted
 NULL_VALUES = (None, '', b'', [], ())

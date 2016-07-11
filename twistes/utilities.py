@@ -1,5 +1,5 @@
-from consts import EsConst
-from exceptions import ScanError
+from twistes.consts import EsConst
+from twistes.exceptions import ScanError
 
 
 class EsUtils(object):

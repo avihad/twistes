@@ -5,11 +5,13 @@ from twisted.internet.defer import inlineCallbacks, returnValue, CancelledError
 from twisted.internet.error import ConnectingCancelledError
 from twisted.web._newclient import ResponseNeverReceived
 
-from scroller import Scroller
-from exceptions import NotFoundError, ConnectionTimeout
-from consts import HttpMethod, EsMethods, EsConst, NULL_VALUES
-from parser import EsParser
-from consts import ResponseCodes
+from twistes.compatability import string_types
+from twistes.exceptions import NotFoundError, ConnectionTimeout
+from twistes.scroller import Scroller
+from twistes.consts import HttpMethod, EsMethods, EsConst, NULL_VALUES
+from twistes.parser import EsParser
+from twistes.consts import ResponseCodes
+from twistes.bulk_utils import BulkUtility
 
 
 class Elasticsearch(object):
@@ -22,6 +24,7 @@ class Elasticsearch(object):
         self._hostname, self._auth = self._es_parser.parse_host(hosts)
         self._timeout = timeout
         self._async_http_client = async_http_client
+        self.bulk_utils = BulkUtility(self)
 
     @inlineCallbacks
     def info(self, **query_params):
@@ -376,7 +379,8 @@ class Elasticsearch(object):
         elif scroll_id:
             query_params[EsConst.SCROLL_ID] = scroll_id
 
-        result = yield self._perform_request(HttpMethod.GET, EsMethods.SCROLL, body, params=query_params)
+        path = self._es_parser.make_path(EsMethods.SEARCH, EsMethods.SCROLL)
+        result = yield self._perform_request(HttpMethod.GET, path, body, params=query_params)
         returnValue(result)
 
     @inlineCallbacks
@@ -396,7 +400,8 @@ class Elasticsearch(object):
         elif scroll_id:
             query_params[EsConst.SCROLL_ID] = scroll_id
 
-        result = yield self._perform_request(HttpMethod.DELETE, EsMethods.SCROLL, body, params=query_params)
+        path = self._es_parser.make_path(EsMethods.SEARCH, EsMethods.SCROLL)
+        result = yield self._perform_request(HttpMethod.DELETE, path, body, params=query_params)
         returnValue(result)
 
     @inlineCallbacks
@@ -437,7 +442,7 @@ class Elasticsearch(object):
         # initial search
         results = yield self.search(index=index, doc_type=doc_type, body=query, scroll=scroll, **kwargs)
 
-        returnValue(Scroller(self, results))
+        returnValue(Scroller(self, results, scroll))
 
     @inlineCallbacks
     def count(self, index=None, doc_type=None, body=None, **query_params):
@@ -529,7 +534,7 @@ class Elasticsearch(object):
     def _perform_request(self, method, path, body=None, params=None):
         url = self._es_parser.prepare_url(self._hostname, path, params)
 
-        if body is not None and not isinstance(body, basestring):
+        if body is not None and not isinstance(body, string_types):
             body = json.dumps(body)
         try:
             response = yield self._async_http_client.request(method, url, data=body, timeout=self._timeout,
@@ -549,7 +554,7 @@ class Elasticsearch(object):
     def _get_content(self, response):
         try:
             content = yield response.json()
-        except ValueError, e:
+        except ValueError as e:
             content = yield response.content()
             content = json.loads(content)
         returnValue(content) if content else returnValue(None)
