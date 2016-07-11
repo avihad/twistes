@@ -42,7 +42,7 @@ class TestScroller(TestCase):
 
         expected_result_2 = [{SOME_VALUE_2: SOME_VALUE_1}]
         es = MagicMock()
-        es.scroll = MagicMock(return_value=self.wrap_good_result(expected_result_2, None))
+        es.scroll = MagicMock(return_value=self.wrap_good_result(expected_result_2, scroll_id))
         scroller = Scroller(es, es_results_1, SOME_SCROLL)
 
         results = []
