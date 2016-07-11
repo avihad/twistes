@@ -405,7 +405,7 @@ class Elasticsearch(object):
         returnValue(result)
 
     @inlineCallbacks
-    def scan(self, index, doc_type, query=None, scroll='5m', preserve_order=False, **kwargs):
+    def scan(self, index, doc_type, query=None, preserve_order=False, **kwargs):
         """
         Simple abstraction on top of the
         :meth:`~elasticsearch.Elasticsearch.scroll` api - a simple iterator that
@@ -440,9 +440,9 @@ class Elasticsearch(object):
         if not preserve_order:
             kwargs['search_type'] = 'scan'
         # initial search
-        results = yield self.search(index=index, doc_type=doc_type, body=query, scroll=scroll, **kwargs)
+        results = yield self.search(index=index, doc_type=doc_type, body=query, **kwargs)
 
-        returnValue(Scroller(self, results, scroll))
+        returnValue(Scroller(self, results, **kwargs))
 
     @inlineCallbacks
     def count(self, index=None, doc_type=None, body=None, **query_params):
