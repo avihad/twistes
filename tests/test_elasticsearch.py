@@ -283,11 +283,12 @@ class TestElasticsearch(TestCase):
         some_search_result = {'hits': {'hits': []}}
         self.es.search = MagicMock(return_value=some_search_result)
         some_search_query = {"query": {"match": {FIELD_1: "blabla"}}}
-        scroll_size = '1m'
-        scroll_result = yield self.es.scan(SOME_INDEX, SOME_DOC_TYPE, query=some_search_query, scroll=scroll_size)
+        scroll_ttl = '1m'
+        scroll_size = 10
+        scroll_result = yield self.es.scan(SOME_INDEX, SOME_DOC_TYPE, query=some_search_query, scroll=scroll_ttl)
         self.es.search.assert_called_once_with(index=SOME_INDEX, doc_type=SOME_DOC_TYPE, body=some_search_query,
-                                               scroll=scroll_size, search_type='scan')
-        self.assertEqual(Scroller(self.es, some_search_result, scroll_size).__dict__, scroll_result.__dict__)
+                                               scroll=scroll_ttl, search_type='scan')
+        self.assertEqual(Scroller(self.es, some_search_result, scroll_ttl, scroll_size).__dict__, scroll_result.__dict__)
 
     @inlineCallbacks
     def test_count(self):
