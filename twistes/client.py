@@ -405,7 +405,7 @@ class Elasticsearch(object):
         returnValue(result)
 
     @inlineCallbacks
-    def scan(self, index, doc_type, query=None, scroll='5m', preserve_order=False, **kwargs):
+    def scan(self, index, doc_type, query=None, scroll='5m', preserve_order=False, size=10, **kwargs):
         """
         Simple abstraction on top of the
         :meth:`~elasticsearch.Elasticsearch.scroll` api - a simple iterator that
@@ -425,6 +425,7 @@ class Elasticsearch(object):
             cause the scroll to paginate with preserving the order. Note that this
             can be an extremely expensive operation and can easily lead to
             unpredictable results, use with caution.
+        :param size: the number of results to fetch in each scroll query
 
         Any additional keyword arguments will be passed to the initial
         :meth:`~elasticsearch.Elasticsearch.search` call::
@@ -442,7 +443,7 @@ class Elasticsearch(object):
         # initial search
         results = yield self.search(index=index, doc_type=doc_type, body=query, scroll=scroll, **kwargs)
 
-        returnValue(Scroller(self, results, scroll))
+        returnValue(Scroller(self, results, scroll, size))
 
     @inlineCallbacks
     def count(self, index=None, doc_type=None, body=None, **query_params):
