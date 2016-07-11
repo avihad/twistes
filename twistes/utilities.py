@@ -22,6 +22,14 @@ class EsUtils(object):
                results[EsConst.HITS][EsConst.HITS]
 
     @staticmethod
+    def is_get_query_with_results(results):
+        """
+        :param results: the response from Elasticsearch
+        :return: true if the get query returned a result, false otherwise
+        """
+        return results and EsConst.FOUND in results and results[EsConst.FOUND] and EsConst.FIELDS in results
+
+    @staticmethod
     def validate_scan_result(results):
         """ Check if there's a failed shard in the scan query"""
         if results[EsConst.SHARDS][EsConst.FAILED] and results[EsConst.SHARDS][EsConst.FAILED] > 0:

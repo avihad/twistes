@@ -45,6 +45,7 @@ class EsConst(object):
     FIELDS = 'fields'
     SCROLL_ID = 'scroll_id'
     HITS = 'hits'
+    FOUND = 'found'
 
 
 class EsBulk(object):
