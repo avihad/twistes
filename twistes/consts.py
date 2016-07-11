@@ -14,6 +14,17 @@ class ResponseCodes(object):
     NOT_FOUND = 404
 
 
+class HostParsing(object):
+    HTTP = 'http'
+    HTTPS = 'https'
+    USE_SSL = 'use_ssl'
+    URL_PREFIX = 'url_prefix'
+    SCHEME = 'scheme'
+    HTTP_AUTH = 'http_auth'
+    PORT = 'port'
+    HOST = 'host'
+
+
 class EsMethods(object):
     MULTIPLE_SEARCH = '_msearch'
     BULK = '_bulk'
