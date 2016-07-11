@@ -18,10 +18,11 @@ class Scroller(object):
                 ...
     """
 
-    def __init__(self, es, results, scroll):
+    def __init__(self, es, results, scroll, size):
         self._first_results = results
         self._scroll_id = results.get(EsDocProperties.SCROLL_ID, None)
-        self.scroll = scroll
+        self._scroll = scroll
+        self._size = size
         self._es = es
 
     def __iter__(self):
@@ -34,7 +35,7 @@ class Scroller(object):
             d = succeed(EsUtils.extract_hits(self._first_results))
             self._first_results = None
         elif self._scroll_id:
-            d = self.scroll_next_results()
+            d = self._scroll_next_results()
         else:
             raise StopIteration()
         return d
@@ -43,8 +44,14 @@ class Scroller(object):
         return self.next()
 
     @inlineCallbacks
-    def scroll_next_results(self):
-        results = yield self._es.scroll(str(self._scroll_id), scroll=self.scroll)
-        self._scroll_id = results.get(EsDocProperties.SCROLL_ID, None)
-        returnValue(EsUtils.extract_hits(results))
+    def _scroll_next_results(self):
+        results = yield self._es.scroll(str(self._scroll_id), scroll=self._scroll)
+        hits = EsUtils.extract_hits(results)
 
+        # No more results
+        if len(hits) < self._size:
+            self._scroll_id = None
+        else:
+            self._scroll_id = results.get(EsDocProperties.SCROLL_ID, None)
+
+        returnValue(hits)
