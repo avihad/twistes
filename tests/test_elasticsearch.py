@@ -287,7 +287,7 @@ class TestElasticsearch(TestCase):
         scroll_size = 10
         scroll_result = yield self.es.scan(SOME_INDEX, SOME_DOC_TYPE, query=some_search_query, scroll=scroll_ttl)
         self.es.search.assert_called_once_with(index=SOME_INDEX, doc_type=SOME_DOC_TYPE, body=some_search_query,
-                                               scroll=scroll_ttl, search_type='scan')
+                                               scroll=scroll_ttl,size=scroll_size, search_type='scan')
         self.assertEqual(Scroller(self.es, some_search_result, scroll_ttl, scroll_size).__dict__, scroll_result.__dict__)
 
     @inlineCallbacks

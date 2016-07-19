@@ -441,7 +441,7 @@ class Elasticsearch(object):
         if not preserve_order:
             kwargs['search_type'] = 'scan'
         # initial search
-        results = yield self.search(index=index, doc_type=doc_type, body=query, scroll=scroll, **kwargs)
+        results = yield self.search(index=index, doc_type=doc_type, body=query,size=size, scroll=scroll, **kwargs)
 
         returnValue(Scroller(self, results, scroll, size))
 
