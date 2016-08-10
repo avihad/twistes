@@ -49,6 +49,7 @@ class ActionParser(object):
 
 
 class BulkUtility(object):
+
     def __init__(self, es):
         self.client = es
 
@@ -147,16 +148,18 @@ class BulkUtility(object):
         """
         Send a bulk request to elasticsearch and process the output.
         """
-        # if raise on error is set, we need to collect errors per chunk before raising them
+        # if raise on error is set, we need to collect errors per chunk before
+        # raising them
 
         resp = None
         try:
             # send the actual request
-            resp = yield self.client.bulk('\n'.join(bulk_actions) + '\n', **kwargs)
+            actions = "{}\n".format('\n'.join(bulk_actions))
+            resp = yield self.client.bulk(actions, **kwargs)
         except ConnectionTimeout as e:
             # default behavior - just propagate exception
             if raise_on_exception:
-                raise e
+                raise
 
             self._handle_transport_error(bulk_actions, e, raise_on_error)
             returnValue([])
@@ -175,13 +178,15 @@ class BulkUtility(object):
                 results.append((ok, {op_type: item}))
 
         if errors:
-            raise BulkIndexError('%i document(s) failed to index.' % len(errors), errors)
+            msg_fmt = '{num} document(s) failed to index.'
+            raise BulkIndexError(msg_fmt.format(num=len(errors)), errors)
         else:
             returnValue(results)
 
     @staticmethod
     def _handle_transport_error(bulk_actions, e, raise_on_error):
-        # if we are not propagating, mark all actions in current chunk as failed
+        # if we are not propagating, mark all actions in current chunk as
+        # failed
         exc_errors = []
         # deserialize the data back, this is expensive but only run on
         # errors if raise_on_exception is false, so shouldn't be a real
@@ -203,4 +208,6 @@ class BulkUtility(object):
 
         # emulate standard behavior for failed actions
         if raise_on_error:
-            raise BulkIndexError('%i document(s) failed to index.' % len(exc_errors), exc_errors)
+            msg_fmt = '{num} document(s) failed to index.'
+            raise BulkIndexError(msg_fmt.format(num=len(exc_errors)),
+                                 exc_errors)

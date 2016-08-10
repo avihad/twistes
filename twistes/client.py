@@ -585,10 +585,10 @@ class Elasticsearch(object):
                 returnValue(content)
 
             if response.code == ResponseCodes.NOT_FOUND:
-                raise NotFoundError()
+                raise NotFoundError(content)
 
             if response.code == ResponseCodes.BAD_REQUEST:
-                raise RequestError("bad request", content)
+                raise RequestError(content)
 
             # This is a place holder for unknown exceptions
             # that haven't been encaplulated yet
@@ -598,8 +598,8 @@ class Elasticsearch(object):
 
         except (ResponseNeverReceived,
                 CancelledError,
-                ConnectingCancelledError):
-            raise ConnectionTimeout()
+                ConnectingCancelledError) as e:
+            raise ConnectionTimeout(str(e))
 
     @inlineCallbacks
     def _get_content(self, response):
