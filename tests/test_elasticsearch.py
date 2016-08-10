@@ -8,7 +8,10 @@ from twisted.web._newclient import ResponseNeverReceived
 
 from twistes.client import Elasticsearch
 from twistes.consts import HttpMethod, EsConst, ResponseCodes, EsMethods
-from twistes.exceptions import NotFoundError, ConnectionTimeout
+from twistes.exceptions import (NotFoundError,
+                                ConnectionTimeout,
+                                ElasticsearchException,
+                                RequestError)
 from twistes.scroller import Scroller
 
 FIELD_2 = 'FIELD_2'
@@ -150,11 +153,18 @@ class TestElasticsearch(TestCase):
                                                                    auth=(SOME_USER, SOME_PASS), data=None,
                                                                    timeout=TIMEOUT)
 
+
+    @inlineCallbacks
+    def test_bad_request_raises_bad_request_error(self):
+        self.es._async_http_client.request = MagicMock(return_value=self.generate_response(400))
+
+        yield self.assertFailure(self.es.get(SOME_INDEX, id=SOME_ID), RequestError)
+
     @inlineCallbacks
     def test_get_unknown_error(self):
         self.es._async_http_client.request = MagicMock(return_value=self.generate_response(504))
 
-        yield self.assertFailure(self.es.get(SOME_INDEX, id=SOME_ID), Exception)
+        yield self.assertFailure(self.es.get(SOME_INDEX, id=SOME_ID), ElasticsearchException)
 
     @inlineCallbacks
     def test_get_connection_timeout(self):
