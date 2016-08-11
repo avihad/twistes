@@ -588,10 +588,10 @@ class Elasticsearch(object):
                 raise NotFoundError()
 
             if response.code == ResponseCodes.BAD_REQUEST:
-                raise RequestError("bad request", content)
+                raise RequestError("bad request on: {}".format(url), content)
 
             # This is a place holder for unknown exceptions
-            # that haven't been encaplulated yet
+            # that haven't been encapsulated yet
             msg_fmt = "unknown error; code: {code} | message: {msg}"
             raise ElasticsearchException(msg_fmt.format(code=response.code,
                                                         msg=str(content)))
