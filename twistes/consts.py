@@ -71,5 +71,13 @@ class EsDocProperties(object):
     SOURCE = '_source'
     SCROLL_ID = '_scroll_id'
 
+
+class EsAggregation(object):
+    AGGREGATIONS = 'aggregations'
+    BUCKETS = 'buckets'
+    DOC_COUNT = 'doc_count'
+    KEY = 'key'
+
+
 # parts of URL to be omitted
 NULL_VALUES = (None, '', b'', [], ())

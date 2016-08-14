@@ -1,4 +1,4 @@
-from twistes.consts import EsConst
+from twistes.consts import EsConst, EsAggregation
 from twistes.exceptions import ScanError
 
 
@@ -20,6 +20,20 @@ class EsUtils(object):
                EsConst.TOTAL in results[EsConst.HITS] and \
                results[EsConst.HITS][EsConst.TOTAL] > 0 and \
                results[EsConst.HITS][EsConst.HITS]
+
+    @staticmethod
+    def has_aggregation_results(results, agg_name):
+        return EsAggregation.AGGREGATIONS in results \
+               and agg_name in results[EsAggregation.AGGREGATIONS]\
+               and EsAggregation.BUCKETS in results[EsAggregation.AGGREGATIONS][agg_name]\
+               and results[EsAggregation.AGGREGATIONS][agg_name][EsAggregation.BUCKETS]
+
+    @staticmethod
+    def extract_aggregation_results(results, agg_name):
+        if EsUtils.has_aggregation_results(results, agg_name):
+            return results[EsAggregation.AGGREGATIONS][agg_name][EsAggregation.BUCKETS]
+        else:
+            return []
 
     @staticmethod
     def is_get_query_with_results(results):
