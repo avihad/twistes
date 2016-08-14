@@ -1,13 +1,12 @@
 import treq
 import json
+
 from twisted.internet.defer import inlineCallbacks, returnValue, CancelledError
 from twisted.internet.error import ConnectingCancelledError
 from twisted.web._newclient import ResponseNeverReceived
+
 from twistes.compatability import string_types
-from twistes.exceptions import (NotFoundError,
-                                ConnectionTimeout,
-                                RequestError,
-                                ElasticsearchException)
+from twistes.exceptions import NotFoundError, ConnectionTimeout
 from twistes.scroller import Scroller
 from twistes.consts import HttpMethod, EsMethods, EsConst, NULL_VALUES
 from twistes.parser import EsParser
@@ -73,9 +72,7 @@ class Elasticsearch(object):
         """
         self._es_parser.is_not_empty_params(index, doc_type, id)
         path = self._es_parser.make_path(index, doc_type, id)
-        result = yield self._perform_request(HttpMethod.HEAD,
-                                             path,
-                                             params=query_params)
+        result = yield self._perform_request(HttpMethod.HEAD, path, params=query_params)
         returnValue(result)
 
     @inlineCallbacks
@@ -106,9 +103,7 @@ class Elasticsearch(object):
         """
         self._es_parser.is_not_empty_params(index, doc_type, id)
         path = self._es_parser.make_path(index, doc_type, id, EsMethods.SOURCE)
-        result = yield self._perform_request(HttpMethod.GET,
-                                             path,
-                                             params=query_params)
+        result = yield self._perform_request(HttpMethod.GET, path, params=query_params)
         returnValue(result)
 
     @inlineCallbacks
@@ -136,15 +131,8 @@ class Elasticsearch(object):
             performing the operation
         """
         self._es_parser.is_not_empty_params(body)
-
-        path = self._es_parser.make_path(index,
-                                         doc_type,
-                                         EsMethods.MULTIPLE_GET)
-
-        result = yield self._perform_request(HttpMethod.GET,
-                                             path,
-                                             body=body,
-                                             params=query_params)
+        path = self._es_parser.make_path(index, doc_type, EsMethods.MULTIPLE_GET)
+        result = yield self._perform_request(HttpMethod.GET, path, body=body, params=query_params)
         returnValue(result)
 
     @inlineCallbacks
@@ -294,15 +282,8 @@ class Elasticsearch(object):
         """
         self._es_parser.is_not_empty_params(index, doc_type, id)
 
-        path = self._es_parser.make_path(index,
-                                         doc_type,
-                                         id,
-                                         EsMethods.EXPLAIN)
-
-        result = yield self._perform_request(HttpMethod.GET,
-                                             path,
-                                             body,
-                                             params=query_params)
+        path = self._es_parser.make_path(index, doc_type, id, EsMethods.EXPLAIN)
+        result = yield self._perform_request(HttpMethod.GET, path, body, params=query_params)
         returnValue(result)
 
     @inlineCallbacks
@@ -460,12 +441,7 @@ class Elasticsearch(object):
         if not preserve_order:
             kwargs['search_type'] = 'scan'
         # initial search
-        results = yield self.search(index=index,
-                                    doc_type=doc_type,
-                                    body=query,
-                                    size=size,
-                                    scroll=scroll,
-                                    **kwargs)
+        results = yield self.search(index=index, doc_type=doc_type, body=query,size=size, scroll=scroll, **kwargs)
 
         returnValue(Scroller(self, results, scroll, size))
 
@@ -533,10 +509,7 @@ class Elasticsearch(object):
         """
         self._es_parser.is_not_empty_params(body)
         path = self._es_parser.make_path(index, doc_type, EsMethods.BULK)
-        result = yield self._perform_request(HttpMethod.POST,
-                                             path,
-                                             self._bulk_body(body),
-                                             params=query_params)
+        result = yield self._perform_request(HttpMethod.POST, path, self._bulk_body(body), params=query_params)
         returnValue(result)
 
     @inlineCallbacks
@@ -554,14 +527,8 @@ class Elasticsearch(object):
             'dfs_query_and_fetch'
         """
         self._es_parser.is_not_empty_params(body)
-        path = self._es_parser.make_path(index,
-                                         doc_type,
-                                         EsMethods.MULTIPLE_SEARCH)
-
-        result = yield self._perform_request(HttpMethod.GET,
-                                             path,
-                                             self._bulk_body(body),
-                                             params=query_params)
+        path = self._es_parser.make_path(index, doc_type, EsMethods.MULTIPLE_SEARCH)
+        result = yield self._perform_request(HttpMethod.GET, path, self._bulk_body(body), params=query_params)
         returnValue(result)
 
     @inlineCallbacks
@@ -571,50 +538,27 @@ class Elasticsearch(object):
         if body is not None and not isinstance(body, string_types):
             body = json.dumps(body)
         try:
-            response = yield self._async_http_client.request(method,
-                                                             url,
-                                                             data=body,
-                                                             timeout=self._timeout,
+            response = yield self._async_http_client.request(method, url, data=body, timeout=self._timeout,
                                                              auth=self._auth)
-
-            content = yield self._get_content(response)
-
-            if response.code in (ResponseCodes.OK,
-                                 ResponseCodes.CREATED,
-                                 ResponseCodes.ACCEPTED):
+            if response.code in (ResponseCodes.OK, ResponseCodes.CREATED, ResponseCodes.ACCEPTED):
+                content = yield self._get_content(response)
                 returnValue(content)
-
-            if response.code == ResponseCodes.NOT_FOUND:
+            elif response.code == ResponseCodes.NOT_FOUND:
                 raise NotFoundError()
-
-            if response.code == ResponseCodes.BAD_REQUEST:
-                raise RequestError("bad request on: {}".format(url), content)
-
-            # This is a place holder for unknown exceptions
-            # that haven't been encapsulated yet
-            msg_fmt = "unknown error; code: {code} | message: {msg}"
-            raise ElasticsearchException(msg_fmt.format(code=response.code,
-                                                        msg=str(content)))
-
-        except (ResponseNeverReceived,
-                CancelledError,
-                ConnectingCancelledError):
+            else:
+                # This is a place holder that will change after we implement the whole Es interface
+                raise Exception(response.code)
+        except (ResponseNeverReceived, CancelledError, ConnectingCancelledError):
             raise ConnectionTimeout()
 
     @inlineCallbacks
     def _get_content(self, response):
-        content = None
         try:
             content = yield response.json()
         except ValueError as e:
-            content_txt = yield response.content()
-            content = json.loads(content_txt)
-        except Exception as e:
-            # unknown exceptions are ignored
-            # and the content is set to None
-            pass
-        finally:
-            returnValue(content)
+            content = yield response.content()
+            content = json.loads(content)
+        returnValue(content) if content else returnValue(None)
 
     @staticmethod
     def _bulk_body(body):
