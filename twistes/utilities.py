@@ -31,7 +31,7 @@ class EsUtils(object):
     @staticmethod
     def extract_aggregation_results(results, agg_name):
         if EsUtils.has_aggregation_results(results, agg_name):
-            return results.get[EsAggregation.AGGREGATIONS][agg_name][EsAggregation.BUCKETS]
+            return results[EsAggregation.AGGREGATIONS][agg_name][EsAggregation.BUCKETS]
         else:
             return []
 
