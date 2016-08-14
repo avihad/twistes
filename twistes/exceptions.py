@@ -5,16 +5,6 @@ class ElasticsearchException(Exception):
     """
 
 
-class RequestError(ElasticsearchException):
-    """
-    Exception raised when ES returns an 400 status code
-    """
-
-    def __init__(self, message, error):
-        super(RequestError, self).__init__(message)
-        self.error = error
-
-
 class TransportError(ElasticsearchException):
     """`
     Exception raised when ES returns a non-OK (>=400) HTTP status code. Or when
@@ -35,7 +25,6 @@ class ScanError(ElasticsearchException):
 
 
 class BulkIndexError(ElasticsearchException):
-
     @property
     def errors(self):
         """ List of errors from execution of the last chunk. """
