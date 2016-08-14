@@ -1,16 +1,18 @@
 language: python
-
 python:
-  - "2.7"
-  - "3.5"
-
-
+- '2.7'
+- '3.5'
 install:
-  - pip install tox-travis python-coveralls
-
-# command to run tests
+- pip install tox-travis python-coveralls
 script:
-  - tox
-
+- tox
 after_success:
-  - coveralls
+- coveralls
+deploy:
+  provider: pypi
+  user: twistesos
+  password:
+    secure: F2ris47rxKZzeF8OHLRzxTns8VIFZ1RQeF8WiTZiM5y0gOnWlhgt8lsxh8oDAm8Yt+hRqeW7la98ZUTJGt93IcqgGo1anoZunAZ5kIjotS+005etACzpQvXyz93e+mm+7oR3X8wL8fgTIRxQKcJX/kvUGx9rNu/EpYd+9ndp4gEFye7KehzrYHUBF6GbEEl0aLgDEuZIR3dRFTFPIPPuawV5GeDTC5opS0m7v2HZFYpz1CbE1evxGtBrm5HNOJeFc+KkbeR9onpCgJ62+Z4KApu04mbL9RosrWg4viegA88h8MY6sdHfWEsTYufQo2bq9qOOaz3zrrTJWcxEyrnuhh/yKhD39E3yjFYCa7d5jHZJuIVARaSXSFohEdYXqxg2NMpA2CZAAA735Gy+8/YMJmsr50kHDf8I0KLKf5PVs37uHOVXUUY/2a8Gnl6pdlpvZ0kaHz74QlB7Y+9AHnLkH3iKlEhdNwEB2End8q5vlaaf9TbZCJHYYhPyVOYqWCBRizHGHPRuN0P8f5dQjR80/8AhrNHhQltRJVG71kehVYC645AoALJyc/fhlanmpjGyDTURM9j0ZOjbdpKREHcyOY0AOJeIZxm/Phnh4jt/tG/kXCVm0+tclrXo/B4RVm4xrFUoO0VK2ZzU4h1O1o84RnObStWdhWMoLsoNXqEeQQI=
+  on:
+    tag: true
+    branch: master
