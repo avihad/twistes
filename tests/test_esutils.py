@@ -4,6 +4,8 @@ from twistes.consts import EsConst, EsDocProperties, EsAggregation
 from twistes.exceptions import ScanError
 from twistes.utilities import EsUtils
 
+SOME_KEY = "some key"
+
 
 class TestEsUtils(TestCase):
     def test_extract_hits(self):
@@ -56,7 +58,7 @@ class TestEsUtils(TestCase):
         agg_name = "results"
         actual_results = [
             {
-                EsAggregation.KEY: "https://www.linkedin.com/company/forward-philippines",
+                EsAggregation.KEY: SOME_KEY,
                 EsAggregation.DOC_COUNT: 1
             }
         ]
@@ -70,11 +72,24 @@ class TestEsUtils(TestCase):
         result = EsUtils.has_aggregation_results(agg_results, agg_name)
         self.assertFalse(result)
 
+    def test_has_aggregation_results_wrong_agg_name(self):
+        agg_name = "results"
+        expected = [
+            {
+                EsAggregation.KEY: SOME_KEY,
+                EsAggregation.DOC_COUNT: 1
+            }
+        ]
+        wrong_agg_name = "wrong_agg"
+        agg_results = self.create_agg_results(agg_name, expected)
+        result = EsUtils.has_aggregation_results(agg_results, wrong_agg_name)
+        self.assertFalse(result)
+
     def test_extract_aggregation_results_has_results(self):
         agg_name = "results"
         expected = [
             {
-                EsAggregation.KEY: "https://www.linkedin.com/company/forward-philippines",
+                EsAggregation.KEY: SOME_KEY,
                 EsAggregation.DOC_COUNT: 1
             }
         ]
@@ -88,6 +103,7 @@ class TestEsUtils(TestCase):
         agg_results = self.create_agg_results(agg_name, expected)
         result = EsUtils.extract_aggregation_results(agg_results, agg_name)
         self.assertEquals(result, expected)
+
 
     @staticmethod
     def create_agg_results(agg_name, actual_results):
