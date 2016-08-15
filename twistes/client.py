@@ -20,11 +20,14 @@ class Elasticsearch(object):
     Elastic search asynchronous http client implemented with treq and twisted
     """
 
-    def __init__(self, hosts, timeout=10, async_http_client=treq):
+    def __init__(self, hosts, timeout=10,
+                 async_http_client=treq,
+                 async_http_client_params=None):
         self._es_parser = EsParser()
         self._hostname, self._auth = self._es_parser.parse_host(hosts)
         self._timeout = timeout
         self._async_http_client = async_http_client
+        self._async_http_client_params = async_http_client_params or {}
         self.bulk_utils = BulkUtility(self)
 
     @inlineCallbacks
@@ -575,7 +578,8 @@ class Elasticsearch(object):
                                                              url,
                                                              data=body,
                                                              timeout=self._timeout,
-                                                             auth=self._auth)
+                                                             auth=self._auth,
+                                                             **self._async_http_client_params)
 
             content = yield self._get_content(response)
 
