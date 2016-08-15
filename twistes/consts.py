@@ -42,6 +42,7 @@ class EsConst(object):
     FAILED = 'failed'
     SHARDS = '_shards'
     ALL_VALUES = '_all'
+    FIELD = 'field'
     FIELDS = 'fields'
     SCROLL_ID = 'scroll_id'
     HITS = 'hits'
@@ -77,6 +78,21 @@ class EsAggregation(object):
     BUCKETS = 'buckets'
     DOC_COUNT = 'doc_count'
     KEY = 'key'
+    AGGS = 'aggs'
+
+
+class EsQuery(object):
+    SIZE = 'size'
+    QUERY = 'query'
+    BOOL = 'bool'
+    MUST = 'must'
+    MUST_NOT = 'must_not'
+    SHOULD = 'should'
+    MATCH_ALL = 'match_all'
+    MATCH = 'match'
+    TERMS = 'terms'
+    FILTER = 'filter'
+    CONSTANT_SCORE = 'constant_score'
 
 
 # parts of URL to be omitted
