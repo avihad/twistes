@@ -43,7 +43,7 @@ setup(
         'Topic :: Software Development :: Testing'
     ],
     packages=find_packages(exclude=["*.tests", "*.tests.*", "tests.*", "tests"]),
-    download_url='https://github.com/avihad/twistes/tarball/{version}'.format(version=main_ns['__version__']),
+    download_url='https://github.com/avihad/twistes/tarball/v{version}'.format(version=main_ns['__version__']),
     zip_safe=False,
     include_package_data=True,
     install_requires=install_requires,
