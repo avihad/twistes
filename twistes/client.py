@@ -14,18 +14,34 @@ from twistes.parser import EsParser
 from twistes.consts import ResponseCodes
 from twistes.bulk_utils import BulkUtility
 
+from twisted.web.client import HTTPConnectionPool
+from twisted.internet import reactor
+from twisted.internet.tcp import Client
+
 
 class Elasticsearch(object):
     """
     Elastic search asynchronous http client implemented with treq and twisted
     """
 
-    def __init__(self, hosts, timeout=10, async_http_client=treq):
+    def __init__(self, hosts, timeout=10,
+                 async_http_client=None,
+                 async_http_client_params=None):
         self._es_parser = EsParser()
         self._hostname, self._auth = self._es_parser.parse_host(hosts)
         self._timeout = timeout
-        self._async_http_client = async_http_client
+        self._async_http_client = async_http_client or treq
+        self._async_http_client_params = async_http_client_params or {}
         self.bulk_utils = BulkUtility(self)
+
+        if self._async_http_client == treq \
+                and 'pool' not in self._async_http_client_params:
+            self.inject_pool_to_treq(self._async_http_client_params)
+
+    def inject_pool_to_treq(self, params):
+        params["pool"] = HTTPConnectionPool(reactor,
+                                            params.pop("persistent",
+                                                       False))
 
     @inlineCallbacks
     def info(self, **query_params):
@@ -575,7 +591,8 @@ class Elasticsearch(object):
                                                              url,
                                                              data=body,
                                                              timeout=self._timeout,
-                                                             auth=self._auth)
+                                                             auth=self._auth,
+                                                             **self._async_http_client_params)
 
             content = yield self._get_content(response)
 
@@ -628,3 +645,22 @@ class Elasticsearch(object):
             body += line_feed
 
         return body
+
+    def close(self):
+        """
+        close all http connections.
+        returns a deferred that fires once they're all closed.
+        """
+
+        # read https://github.com/twisted/treq/issues/86
+        # to understand the following...
+
+        def _check_fds(_):
+            fds = set(reactor.getReaders() + reactor.getReaders())
+            if not [fd for fd in fds if isinstance(fd, Client)]:
+                return
+
+            return deferLater(reactor, 0, _check_fds, None)
+
+        pool = self._async_http_client_params["pool"]
+        return pool.closeCachedConnections().addBoth(_check_fds)
