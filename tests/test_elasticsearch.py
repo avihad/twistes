@@ -1,6 +1,5 @@
 import json
 from twistes.compatability import urlencode, quote
-import treq
 from mock import MagicMock
 from twisted.internet.defer import inlineCallbacks
 from twisted.trial.unittest import TestCase
@@ -44,6 +43,7 @@ class TestElasticsearch(TestCase):
         self.es = Elasticsearch(SOME_HOSTS_CONFIG, TIMEOUT, MagicMock())
 
     def test_default_async_class(self):
+        import treq
         es = Elasticsearch(SOME_HOSTS_CONFIG, TIMEOUT)
         self.assertEqual(es._async_http_client, treq)
 
@@ -57,9 +57,9 @@ class TestElasticsearch(TestCase):
 
     @inlineCallbacks
     def test_async_class_params_are_passed_to_requests(self):
+        async_client = MagicMock()
         ok_response = self.generate_response(ResponseCodes.OK)
 
-        async_client = MagicMock()
         async_client.request = MagicMock(return_value=ok_response)
 
         async_client_params = {"test": "test"}
@@ -68,16 +68,17 @@ class TestElasticsearch(TestCase):
                            async_client,
                            async_client_params)
 
-        result = yield es._perform_request(HttpMethod.GET, "/", None)
+        yield es.info()
+
         auth = (SOME_USER, SOME_PASS)
 
         expected_url = self._generate_url(SOME_HOST, SOME_PORT, None)
-        es._async_http_client.request.assert_called_once_with(HttpMethod.GET,
-                                                              expected_url,
-                                                              auth=auth,
-                                                              data=None,
-                                                              timeout=TIMEOUT,
-                                                              **async_client_params)
+        async_client.request.assert_called_once_with(HttpMethod.GET,
+                                                     expected_url,
+                                                     auth=auth,
+                                                     data=None,
+                                                     timeout=TIMEOUT,
+                                                     **async_client_params)
 
     @inlineCallbacks
     def test_close_closes_the_pool(self):
