@@ -72,6 +72,12 @@ class TestEsUtils(TestCase):
         result = EsUtils.has_aggregation_results(agg_results, agg_name)
         self.assertFalse(result)
 
+    def test_has_aggregation_none_results_false(self):
+        agg_name = "results"
+        agg_results = None
+        result = EsUtils.has_aggregation_results(agg_results, agg_name)
+        self.assertFalse(result)
+
     def test_has_aggregation_results_wrong_agg_name(self):
         agg_name = "results"
         expected = [
