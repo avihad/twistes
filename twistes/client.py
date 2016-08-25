@@ -5,7 +5,7 @@ import json
 from twisted.internet.defer import inlineCallbacks, returnValue, CancelledError
 from twisted.internet.error import ConnectingCancelledError
 from twisted.web._newclient import ResponseNeverReceived
-from twistes.compatability import string_types
+from twistes.compatability import string_types, urlparse
 from twistes.exceptions import (NotFoundError,
                                 ConnectionTimeout,
                                 RequestError,
@@ -654,12 +654,21 @@ class Elasticsearch(object):
         returns a deferred that fires once they're all closed.
         """
 
+        def validate_client(client):
+            """
+            Validate that the connection is for the current client
+            :param client:
+            :return:
+            """
+            host, port = client.addr
+            parsed_url = urlparse(self._hostname)
+            return host == parsed_url.hostname and port == parsed_url.port
+
         # read https://github.com/twisted/treq/issues/86
         # to understand the following...
-
         def _check_fds(_):
             fds = set(reactor.getReaders() + reactor.getReaders())
-            if not [fd for fd in fds if isinstance(fd, Client)]:
+            if not [fd for fd in fds if isinstance(fd, Client) and validate_client(fd)]:
                 return
 
             return deferLater(reactor, 0, _check_fds, None)
