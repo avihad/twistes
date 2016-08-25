@@ -1,3 +1,5 @@
+from twisted.internet.task import deferLater
+
 import treq
 import json
 from twisted.internet.defer import inlineCallbacks, returnValue, CancelledError
