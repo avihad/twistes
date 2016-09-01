@@ -43,6 +43,12 @@ class Elasticsearch(object):
     def inject_pool_to_treq(self, params):
         params["pool"] = HTTPConnectionPool(reactor,
                                             params.pop("persistent",
+                                                       True),
+                                            params.pop("maxPersistentPerHost",
+                                                       10),
+                                            params.pop("cachedConnectionTimeout",
+                                                       30),                                                       
+                                            params.pop("retryAutomatically",
                                                        False))
 
     @inlineCallbacks
