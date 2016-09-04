@@ -42,7 +42,7 @@ class Elasticsearch(object):
 
     @staticmethod
     def inject_pool_to_treq(params):
-        params["pool"] = HTTPConnectionPool(reactor, params.pop("persistent", False))
+        params["pool"] = HTTPConnectionPool(reactor, params.pop("persistent", True))
 
         for key, default_value in TREQ_POOL_DEFAULT_PARAMS.items():
             setattr(params["pool"], key, params.pop(key, default_value))
