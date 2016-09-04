@@ -95,5 +95,11 @@ class EsQuery(object):
     CONSTANT_SCORE = 'constant_score'
 
 
+TREQ_POOL_DEFAULT_PARAMS = {
+    "maxPersistentPerHost": 10,
+    "cachedConnectionTimeout": 30,
+    "retryAutomatically": False
+}
+
 # parts of URL to be omitted
 NULL_VALUES = (None, '', b'', [], ())
