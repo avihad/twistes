@@ -11,7 +11,7 @@ from twistes.exceptions import (NotFoundError,
                                 RequestError,
                                 ElasticsearchException)
 from twistes.scroller import Scroller
-from twistes.consts import HttpMethod, EsMethods, EsConst, NULL_VALUES
+from twistes.consts import HttpMethod, EsMethods, EsConst, NULL_VALUES, TREQ_POOL_DEFAULT_PARAMS
 from twistes.parser import EsParser
 from twistes.consts import ResponseCodes
 from twistes.bulk_utils import BulkUtility
@@ -40,10 +40,12 @@ class Elasticsearch(object):
                 and 'pool' not in self._async_http_client_params:
             self.inject_pool_to_treq(self._async_http_client_params)
 
-    def inject_pool_to_treq(self, params):
-        params["pool"] = HTTPConnectionPool(reactor,
-                                            params.pop("persistent",
-                                                       False))
+    @staticmethod
+    def inject_pool_to_treq(params):
+        params["pool"] = HTTPConnectionPool(reactor, params.pop("persistent", False))
+
+        for key, default_value in TREQ_POOL_DEFAULT_PARAMS.items():
+            setattr(params["pool"], key, params.pop(key, default_value))
 
     @inlineCallbacks
     def info(self, **query_params):
