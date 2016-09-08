@@ -12,7 +12,7 @@ ver_path = convert_path('twistes/version.py')
 with codecs.open(ver_path, 'rb', 'utf8') as ver_file:
     exec (ver_file.read(), main_ns)
 
-install_requires = ['twisted==16.2.0', 'treq==15.1.0']
+install_requires = ['twisted', 'treq']
 
 if sys.version_info < (2, 7):
     # python 2.6 isn't supported
