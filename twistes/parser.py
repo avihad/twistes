@@ -108,7 +108,7 @@ class EsParser(object):
         :param sub_paths: a list of sub paths
         :return:
         """
-        queued_params = [quote(str(c), '') for c in sub_paths if c not in NULL_VALUES]
+        queued_params = [quote(c.encode('utf-8'), '') for c in sub_paths if c not in NULL_VALUES]
         queued_params.insert(0, '')
         return '/'.join(queued_params)
 
