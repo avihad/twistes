@@ -585,7 +585,7 @@ class Elasticsearch(object):
         returnValue(result)
 
     @inlineCallbacks
-    def _perform_request(self, method, path, body=None, params=None):
+    def _perform_request(self, method, path, body=None, params=None, retry_on_timeout=False):
         url = self._es_parser.prepare_url(self._hostname, path, params)
 
         if body is not None and not isinstance(body, string_types):
@@ -620,6 +620,17 @@ class Elasticsearch(object):
         except (ResponseNeverReceived,
                 CancelledError,
                 ConnectingCancelledError) as e:
+
+            if retry_on_timeout:
+                response = yield self._async_http_client.request(method,
+                                                                 url,
+                                                                 data=body,
+                                                                 timeout=self._timeout,
+                                                                 auth=self._auth,
+                                                                 **self._async_http_client_params)
+                content = yield self._get_content(response)
+                returnValue(content)
+
             raise ConnectionTimeout(str(e))
 
     @inlineCallbacks
