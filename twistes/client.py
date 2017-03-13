@@ -28,13 +28,17 @@ class Elasticsearch(object):
 
     def __init__(self, hosts, timeout=10,
                  async_http_client=None,
-                 async_http_client_params=None):
+                 async_http_client_params=None,
+                 retry_on_timeout=True,
+                 max_retries=0):
         self._es_parser = EsParser()
         self._hostname, self._auth = self._es_parser.parse_host(hosts)
         self._timeout = timeout
         self._async_http_client = async_http_client or treq
         self._async_http_client_params = async_http_client_params or {}
         self.bulk_utils = BulkUtility(self)
+        self._retry_on_timeout = retry_on_timeout
+        self._max_retries = max_retries
 
         if self._async_http_client == treq \
                 and 'pool' not in self._async_http_client_params:
@@ -585,7 +589,7 @@ class Elasticsearch(object):
         returnValue(result)
 
     @inlineCallbacks
-    def _perform_request(self, method, path, body=None, params=None, retry_on_timeout=False):
+    def _perform_request(self, method, path, body=None, params=None):
         url = self._es_parser.prepare_url(self._hostname, path, params)
 
         if body is not None and not isinstance(body, string_types):
@@ -617,20 +621,18 @@ class Elasticsearch(object):
             raise ElasticsearchException(msg_fmt.format(code=response.code,
                                                         msg=str(content)))
 
-        except (ResponseNeverReceived,
-                CancelledError,
-                ConnectingCancelledError) as e:
+        except ResponseNeverReceived as e:
 
-            if retry_on_timeout:
-                response = yield self._async_http_client.request(method,
-                                                                 url,
-                                                                 data=body,
-                                                                 timeout=self._timeout,
-                                                                 auth=self._auth,
-                                                                 **self._async_http_client_params)
+            if self._retry_on_timeout and self._max_retries <= 3:
+                self._max_retries += 1
+                response = yield self._perform_request(method, path, body, params)
                 content = yield self._get_content(response)
                 returnValue(content)
 
+            raise ConnectionTimeout(str(e))
+
+        except (CancelledError,
+                ConnectingCancelledError) as e:
             raise ConnectionTimeout(str(e))
 
     @inlineCallbacks
