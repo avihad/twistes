@@ -618,14 +618,14 @@ class Elasticsearch(object):
                 raise RequestError(content)
 
             # This is a place holder for unknown exceptions
-            # that haven't been encaplulated yet
+            # that haven't been encapsulated yet
             msg_fmt = "unknown error; code: {code} | message: {msg}"
             raise ElasticsearchException(msg_fmt.format(code=response.code,
                                                         msg=str(content)))
 
         except ResponseNeverReceived as e:
 
-            if self._retry_on_timeout and num_retries >= 0:
+            if self._retry_on_timeout and num_retries > 0:
                 response = yield self._perform_request(method, path, body, params, num_retries - 1)
                 returnValue(response)
 
