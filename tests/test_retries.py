@@ -34,14 +34,17 @@ class TestRetries(TestCase):
         self.assertEqual(NUM_RETRIES + 1, async_http_client.request.call_count)
 
     @inlineCallbacks
-    def test_perform_request_success(self):
+    def test_perform_request_success_after_retries(self):
         async_http_client = MagicMock()
-        async_http_client.request = MagicMock(return_value=self.generate_response(ResponseCodes.OK))
+        async_http_client.request = MagicMock(side_effect=[ResponseNeverReceived("test"),
+                                                           ResponseNeverReceived("test"),
+                                                           self.generate_response(ResponseCodes.OK)])
 
         es = self.get_es(async_http_client)
         es._get_content = MagicMock(return_value=SOME_CONTENT)
 
         r = yield es._perform_request(METHOD, PATH, BODY)
+        self.assertEqual(NUM_RETRIES, async_http_client.request.call_count)
         self.assertEqual(SOME_CONTENT, r)
 
     @staticmethod
