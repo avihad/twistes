@@ -28,13 +28,17 @@ class Elasticsearch(object):
 
     def __init__(self, hosts, timeout=10,
                  async_http_client=None,
-                 async_http_client_params=None):
+                 async_http_client_params=None,
+                 retry_on_timeout=False,
+                 max_retries=3):
         self._es_parser = EsParser()
         self._hostname, self._auth = self._es_parser.parse_host(hosts)
         self._timeout = timeout
         self._async_http_client = async_http_client or treq
         self._async_http_client_params = async_http_client_params or {}
         self.bulk_utils = BulkUtility(self)
+        self._retry_on_timeout = retry_on_timeout
+        self._max_retries = max_retries
 
         if self._async_http_client == treq \
                 and 'pool' not in self._async_http_client_params:
@@ -585,7 +589,9 @@ class Elasticsearch(object):
         returnValue(result)
 
     @inlineCallbacks
-    def _perform_request(self, method, path, body=None, params=None):
+    def _perform_request(self, method, path, body=None, params=None, num_retries=None):
+
+        num_retries = self._max_retries if num_retries is None else num_retries
         url = self._es_parser.prepare_url(self._hostname, path, params)
 
         if body is not None and not isinstance(body, string_types):
@@ -612,13 +618,20 @@ class Elasticsearch(object):
                 raise RequestError(content)
 
             # This is a place holder for unknown exceptions
-            # that haven't been encaplulated yet
+            # that haven't been encapsulated yet
             msg_fmt = "unknown error; code: {code} | message: {msg}"
             raise ElasticsearchException(msg_fmt.format(code=response.code,
                                                         msg=str(content)))
 
-        except (ResponseNeverReceived,
-                CancelledError,
+        except ResponseNeverReceived as e:
+
+            if self._retry_on_timeout and num_retries > 0:
+                response = yield self._perform_request(method, path, body, params, num_retries - 1)
+                returnValue(response)
+
+            raise ConnectionTimeout(str(e))
+
+        except (CancelledError,
                 ConnectingCancelledError) as e:
             raise ConnectionTimeout(str(e))
 
