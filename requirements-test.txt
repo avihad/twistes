@@ -1,0 +1,3 @@
+# Specifies only test-specific requirements
+nose
+mock
