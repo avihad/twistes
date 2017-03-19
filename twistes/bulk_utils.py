@@ -2,7 +2,6 @@ import json
 from operator import methodcaller
 
 from twisted.internet.defer import inlineCallbacks, returnValue
-
 from twistes.compatability import string_types
 from twistes.consts import EsBulk, EsDocProperties
 from twistes.exceptions import BulkIndexError, ConnectionTimeout
@@ -54,7 +53,7 @@ class BulkUtility(object):
         self.client = es
 
     @inlineCallbacks
-    def bulk(self, actions, stats_only=False, **kwargs):
+    def bulk(self, actions, stats_only=False, verbose=False, **kwargs):
         """
         Helper for the :meth:`~elasticsearch.Elasticsearch.bulk` api that provides
         a more human friendly interface - it consumes an iterator of actions and
@@ -67,26 +66,29 @@ class BulkUtility(object):
         :arg stats_only: if `True` only report number of successful/failed
             operations instead of just number of successful and a list of error responses
         Any additional keyword arguments will be passed to
+        :arg verbose: return verbose data: (inserted, errors)
         :func:`~elasticsearch.helpers.streaming_bulk` which is used to execute
         the operation.
         """
-        success, failed = 0, 0
 
-        # list of errors to be collected is not stats_only
+        inserted = []
         errors = []
 
         for deferred_bulk in self.streaming_bulk(actions, **kwargs):
             bulk_results = yield deferred_bulk
             for ok, item in bulk_results:
                 # go through request-response pairs and detect failures
-                if not ok:
-                    if not stats_only:
-                        errors.append(item)
-                    failed += 1
-                else:
-                    success += 1
-        summarized_results = success, failed if stats_only else errors
-        returnValue(summarized_results)
+                l = inserted if ok else errors
+                l.append(item)
+
+        if verbose:
+            returnValue((inserted, errors))
+
+        if stats_only:
+            returnValue((len(inserted), len(errors)))
+
+        # here for backwards compatibility
+        returnValue((len(inserted), errors))
 
     def streaming_bulk(self, actions, chunk_size=500, max_chunk_bytes=100 * 1024 * 1024,
                        raise_on_error=True, expand_action_callback=ActionParser.expand_action,
@@ -137,6 +139,7 @@ class BulkUtility(object):
             bulk_actions.append(action)
             if data is not None:
                 bulk_actions.append(data)
+
             size += cur_size
             action_count += 1
 
@@ -201,6 +204,7 @@ class BulkUtility(object):
                 info = {"error": str(e), "exception": e}
                 if op_type != 'delete':
                     info['data'] = next(bulk_data)
+
                 info.update(action)
                 exc_errors.append({op_type: info})
             except StopIteration:

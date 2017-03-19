@@ -16,9 +16,10 @@ SOME_DOC = {"field1": "value1", "field2": "value2"}
 SOME_ID = "some_id"
 
 ERROR_MSG = "error_msg"
+SUCCESS = "success"
 ITEM_FAILED = (False, ERROR_MSG)
 
-ITEM_SUCCESS = (True, None)
+ITEM_SUCCESS = (True, SUCCESS)
 
 
 class TestBulkUtility(TestCase):
@@ -35,11 +36,31 @@ class TestBulkUtility(TestCase):
         self.assertEqual(1, faileds)
 
     @inlineCallbacks
-    def test_bulk(self):
-        return_value = [succeed([ITEM_SUCCESS, ITEM_SUCCESS, ITEM_FAILED])]
+    def test_bulk_not_stats_only(self):
+        return_value = [succeed([ITEM_SUCCESS,
+                                 ITEM_SUCCESS,
+                                 ITEM_FAILED,
+                                 ITEM_FAILED,
+                                 ITEM_FAILED])]
         self.bulk_utility.streaming_bulk = MagicMock(return_value=return_value)
-        errors = yield self.bulk_utility.bulk(None)
-        self.assertEqual((2, [ERROR_MSG]), errors)
+        success, errors = yield self.bulk_utility.bulk(None, stats_only=False)
+        self.assertEqual(success, 2)
+        self.assertEqual([ERROR_MSG] * 3, errors)
+
+    @inlineCallbacks
+    def test_bulk_verbose_output(self):
+        output = [ITEM_SUCCESS,
+                  ITEM_SUCCESS,
+                  ITEM_FAILED,
+                  ITEM_FAILED,
+                  ITEM_FAILED]
+
+        return_value = [succeed(output)]
+
+        self.bulk_utility.streaming_bulk = MagicMock(return_value=return_value)
+        inserted, errors = yield self.bulk_utility.bulk(None, verbose=True)
+        self.assertEqual([SUCCESS] * 2, inserted)
+        self.assertEqual([ERROR_MSG] * 3, errors)
 
     def test_streaming_bulk(self):
         self.bulk_utility._process_bulk_chunk = MagicMock()
