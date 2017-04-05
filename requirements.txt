@@ -1,2 +1,2 @@
 twisted
-treq
+treq==16.12.0
