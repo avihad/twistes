@@ -73,16 +73,17 @@ class BulkUtility(object):
 
         inserted = []
         errors = []
-
+        all = []
         for deferred_bulk in self.streaming_bulk(actions, **kwargs):
             bulk_results = yield deferred_bulk
             for ok, item in bulk_results:
                 # go through request-response pairs and detect failures
+                all.append((ok, item))
                 l = inserted if ok else errors
                 l.append(item)
 
         if verbose:
-            returnValue((inserted, errors))
+            returnValue(all)
 
         if stats_only:
             returnValue((len(inserted), len(errors)))

@@ -58,9 +58,13 @@ class TestBulkUtility(TestCase):
         return_value = [succeed(output)]
 
         self.bulk_utility.streaming_bulk = MagicMock(return_value=return_value)
-        inserted, errors = yield self.bulk_utility.bulk(None, verbose=True)
-        self.assertEqual([SUCCESS] * 2, inserted)
-        self.assertEqual([ERROR_MSG] * 3, errors)
+        items = yield self.bulk_utility.bulk(None, verbose=True)
+
+        self.assertEqual([ITEM_SUCCESS] * 2,
+                         [x for x in items if x == ITEM_SUCCESS])
+
+        self.assertEqual([ITEM_FAILED] * 3,
+                         [x for x in items if x == ITEM_FAILED])
 
     def test_streaming_bulk(self):
         self.bulk_utility._process_bulk_chunk = MagicMock()
@@ -72,8 +76,8 @@ class TestBulkUtility(TestCase):
 
         cb = MagicMock()
 
-        bulk = list(self.bulk_utility.streaming_bulk(range(num_of_actions),
-                                                     expand_action_callback=cb))
+        list(self.bulk_utility.streaming_bulk(range(num_of_actions),
+                                              expand_action_callback=cb))
 
         self.assertEqual(num_of_actions,
                          cb.call_count)
